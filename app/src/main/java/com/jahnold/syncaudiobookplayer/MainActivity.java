@@ -1,11 +1,18 @@
 package com.jahnold.syncaudiobookplayer;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,9 +20,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
 
+import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
+import com.jahnold.syncaudiobookplayer.Fragments.LogInFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.NavigationDrawerFragment;
+import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.parse.Parse;
 import com.parse.ParseObject;
+import com.parse.ParseUser;
+
+import java.io.File;
 
 
 public class MainActivity extends ActionBarActivity
@@ -36,26 +49,81 @@ public class MainActivity extends ActionBarActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Set up Parse
-        Parse.enableLocalDatastore(this);
-        Parse.initialize(this, "vlT3h1c4hLBPBvdyayxNWdxpz71RVjkMnS8mFmIo", "D2qWkrjNjZDoKbdqoW5mESmK9Ytj3uz0A10HHEPr");
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+
+        // set up the nav draw
+        mNavigationDrawerFragment = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
-
-        // Set up the drawer.
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
+                (DrawerLayout) findViewById(R.id.drawer_layout)
+        );
+
+        // check if a user is logged in
+        if (ParseUser.getCurrentUser() == null) {
+
+            // no user - show log-in fragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, new LogInFragment(), "BookListFragment")
+                    .commit();
+        }
+        else {
+
+            // show the book list fragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, new BookListFragment(), "BookListFragment")
+                    .commit();
+        }
+
+
     }
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
+
+        // catch the number 3 because this is an activity rather than a fragment
+        if (position == 2) {
+
+            Intent fileExploreIntent = new Intent(
+                    FileBrowserActivity.INTENT_ACTION_SELECT_DIR,
+                    null,
+                    getApplicationContext(),
+                    FileBrowserActivity.class
+            );
+
+            // don't show hidden dirs
+            fileExploreIntent.putExtra(FileBrowserActivity.showCannotReadParameter, false);
+
+            startActivityForResult(
+                    fileExploreIntent,
+                    454
+            );
+
+        }
+
+        Fragment fragment;
+        String tag;
+        switch (position) {
+            case 0:
+                fragment = new BookListFragment();
+                tag = "BookListFragment";
+                break;
+
+
+            default:
+                fragment = new BookListFragment();
+                tag = "BookListFragment";
+                break;
+
+        }
+
         // update the main content by replacing fragments
         FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
+        fragmentManager
+                .beginTransaction()
+                .replace(R.id.container, fragment, tag)
                 .commit();
     }
 
@@ -102,51 +170,25 @@ public class MainActivity extends ActionBarActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+//        if (id == R.id.action_settings) {
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
+        super.onActivityResult(requestCode, resultCode, data);
 
-        public PlaceholderFragment() {
-        }
+        if (requestCode == 454 && resultCode == MainActivity.RESULT_OK && data != null) {
 
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            return rootView;
-        }
 
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((MainActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
+            String directory = data.getStringExtra(FileBrowserActivity.returnDirectoryParameter);
+            Book.createFromLocal(directory);
         }
     }
+
 
 }

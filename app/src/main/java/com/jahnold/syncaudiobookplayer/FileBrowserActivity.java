@@ -119,8 +119,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 
 		if (this.path == null) {// No or invalid directory supplied in intent
 								// parameter
-			if (Environment.getExternalStorageDirectory().isDirectory()
-					&& Environment.getExternalStorageDirectory().canRead())
+			if (Environment.getExternalStorageDirectory().isDirectory() && Environment.getExternalStorageDirectory().canRead())
 				path = Environment.getExternalStorageDirectory();
 			else
 				path = new File("/");
@@ -151,8 +150,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 			}
 		});
 
-		Button selectFolderButton = (Button) this
-				.findViewById(R.id.selectCurrentDirectoryButton);
+		Button selectFolderButton = (Button) this.findViewById(R.id.selectCurrentDirectoryButton);
 		if (currentAction == SELECT_DIRECTORY) {
 			selectFolderButton.setOnClickListener(new OnClickListener() {
 				public void onClick(View v) {
@@ -169,8 +167,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 		// present directory removed from list
 		String s = pathDirsList.remove(pathDirsList.size() - 1);
 		// path modified to exclude present directory
-		path = new File(path.toString().substring(0,
-				path.toString().lastIndexOf(s)));
+		path = new File(path.toString().substring(0, path.toString().lastIndexOf(s)));
 		fileList.clear();
 	}
 
@@ -182,27 +179,25 @@ public class FileBrowserActivity extends ActionBarActivity {
 			i++;
 		}
 		if (pathDirsList.size() == 0) {
-			((Button) this.findViewById(R.id.upDirectoryButton))
-					.setEnabled(false);
+			((Button) this.findViewById(R.id.upDirectoryButton)).setEnabled(false);
 			curDirString = "/";
-		} else
-			((Button) this.findViewById(R.id.upDirectoryButton))
-					.setEnabled(true);
+		}
+        else {
+            ((Button) this.findViewById(R.id.upDirectoryButton)).setEnabled(true);
+        }
 		long freeSpace = getFreeSpace(curDirString);
 		String formattedSpaceString = formatBytes(freeSpace);
-		if (freeSpace == 0) {
-			Log.d(LOGTAG, "NO FREE SPACE");
-			File currentDir = new File(curDirString);
-			if(!currentDir.canWrite())
-				formattedSpaceString = "NON Writable";
-		}
 
-		((Button) this.findViewById(R.id.selectCurrentDirectoryButton))
-				.setText("Select\n[" + formattedSpaceString
-						+ "]");
+//        if (freeSpace == 0) {
+//			Log.d(LOGTAG, "NO FREE SPACE");
+//			File currentDir = new File(curDirString);
+//			if(!currentDir.canWrite())
+//				formattedSpaceString = "NON Writable";
+//		}
 
-		((TextView) this.findViewById(R.id.currentDirectoryTextView))
-				.setText("Current directory: " + curDirString);
+		//((Button) this.findViewById(R.id.selectCurrentDirectoryButton)).setText("Select\n[" + formattedSpaceString+ "]");
+
+		((TextView) this.findViewById(R.id.currentDirectoryTextView)).setText("Current directory: " + curDirString);
 	}
 
 	private void showToast(String message) {

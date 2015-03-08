@@ -1,6 +1,27 @@
 <resources>
     <string name="app_name">Sync Audiobook Player</string>
 
+    <string name="parse_app_id">vlT3h1c4hLBPBvdyayxNWdxpz71RVjkMnS8mFmIo</string>
+    <string name="parse_client_key">D2qWkrjNjZDoKbdqoW5mESmK9Ytj3uz0A10HHEPr</string>
+
+    <string name="text_login">Login to Sync Audiobook Player</string>
+    <string name="text_register_prompt">New to Sync Audiobook Player?</string>
+    <string name="text_register">Register Sync Audiobook Player Account</string>
+    <string name="text_login_failed">Oh Noes! Email or Password Incorrect</string>
+
+    <string name="hint_email">email</string>
+    <string name="hint_password">password</string>
+    <string name="hint_first_name">first name</string>
+    <string name="hint_last_name">last name</string>
+    <string name="hint_question">question</string>
+    <string name="hint_answer">answer</string>
+
+    <string name="btn_login">Login</string>
+    <string name="btn_register">Register</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_submit">Submit</string>
+    <string name="btn_save">Save</string>
+
     <string name="nav_all_books">All Books</string>
     <string name="nav_authors">Authors</string>
     <string name="nav_playing_now">Playing Now</string>
