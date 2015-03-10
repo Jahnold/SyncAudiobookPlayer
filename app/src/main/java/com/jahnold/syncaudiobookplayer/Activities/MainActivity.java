@@ -1,34 +1,21 @@
-package com.jahnold.syncaudiobookplayer;
+package com.jahnold.syncaudiobookplayer.Activities;
 
-import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.DatabaseUtils;
-import android.media.MediaMetadataRetriever;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.support.v4.widget.DrawerLayout;
 
 import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.LogInFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.NavigationDrawerFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
-import com.parse.Parse;
-import com.parse.ParseObject;
+import com.jahnold.syncaudiobookplayer.R;
 import com.parse.ParseUser;
-
-import java.io.File;
 
 
 public class MainActivity extends ActionBarActivity

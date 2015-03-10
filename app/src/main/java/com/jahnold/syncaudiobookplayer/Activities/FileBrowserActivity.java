@@ -1,4 +1,4 @@
-package com.jahnold.syncaudiobookplayer;
+package com.jahnold.syncaudiobookplayer.Activities;
 
 //Heavily based on code from
 //https://github.com/mburman/Android-File-Explore
@@ -32,6 +32,8 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.*;
 import android.widget.*;
+
+import com.jahnold.syncaudiobookplayer.R;
 
 
 public class FileBrowserActivity extends ActionBarActivity {
