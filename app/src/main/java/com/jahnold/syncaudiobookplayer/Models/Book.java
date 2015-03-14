@@ -11,10 +11,12 @@ import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Fragments.ImportBookDialogFragment;
 import com.jahnold.syncaudiobookplayer.Util.Installation;
 import com.jahnold.syncaudiobookplayer.Util.MediaFile;
+import com.parse.FindCallback;
 import com.parse.ParseClassName;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
@@ -203,7 +205,16 @@ public class Book extends ParseObject {
 
     }
 
+    public static ArrayList<Book> loadAll(FindCallback<Book> callback) {
 
+        ArrayList<Book> books = new ArrayList<>();
+
+        ParseQuery<Book> query = ParseQuery.getQuery(Book.class);
+        query.whereEqualTo("user", ParseUser.getCurrentUser());
+        query.findInBackground(callback);
+
+        return books;
+    }
 
     /**
      *  Do we know the path to the book on the current device
