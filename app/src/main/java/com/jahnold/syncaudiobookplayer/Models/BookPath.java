@@ -9,7 +9,7 @@ public class BookPath extends ParseObject {
     // getters
     public String getPath() { return getString("path"); }
     public String getInstallId() { return getString("installId"); }
-    public Book getBook() { return  (Book) getParseObject("book"); }
+    public Book getBook() { return (Book) getParseObject("book"); }
 
     // setters
     public void setPath(String path) { put("path", path);}

@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Fragments.ImportBookDialogFragment;
@@ -59,124 +60,146 @@ public class Book extends ParseObject {
         increment("length", length);
     }
 
-    public static void createFromLocal(final Context context, final String directory, ProgressDialog dialog) {
+    public static void createFromLocal(final Context context, final String directory, final ProgressDialog dialog) {
 
         // create a file ref from our returned directory string
         File bookDir = new File(directory);
-        File[] listFiles = bookDir.listFiles();
+        File[] files = bookDir.listFiles();
 
         // make sure that there are files
-        if (listFiles == null || listFiles.length < 1) {
+        if (files == null || files.length < 1) {
             return;
         }
 
+        new AsyncTask<File,String,Book>() {
 
-        // create a book and set some defaults
-        final Book book = new Book();
-        book.setUser(ParseUser.getCurrentUser());
-        book.setCurrentPosition(0);
-
-        final ArrayList<AudioFile> audioFiles = new ArrayList<>();
-        String title = "";
-        String author = "";
-
-        // loop through all the files
-        for (File file : listFiles) {
-
-            String filePath = file.getAbsolutePath();
-
-
-            // use the MediaFile helper class to determine whether the file is audio
-            // if not skip and move onto next file
-            if (!MediaFile.isAudioFileType(MediaFile.getFileType(filePath).fileType)) {
-                continue;
-            }
-
-            // update the progress dialog
-            dialog.setMessage(file.getName());
-
-            // use meta data retriever to get title & track number
-            MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
-            metadataRetriever.setDataSource(filePath);
-            title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-            author = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-            int trackNumber = Integer.valueOf(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
-
-            // filename = easy
-            String fileName = file.getName();
-
-            int duration = 0;
-            try {
-
-                // use a media player to get the duration
-                MediaPlayer mediaPlayer = new MediaPlayer();
-                mediaPlayer.setDataSource(filePath);
-                mediaPlayer.prepare();
-                duration = mediaPlayer.getDuration();
-
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            // create a new audio file with the data we've gathered
-            AudioFile audioFile = new AudioFile(
-                    fileName,
-                    title,
-                    trackNumber,
-                    false,
-                    duration
-            );
-
-            // add the file duration to the overall length of the book
-            book.incrementLength(duration);
-
-            // add file to the array list
-            audioFiles.add(audioFile);
-
-
-        }
-
-        book.setAudioFiles(audioFiles);
-
-        // hide the progress dialog
-        dialog.hide();
-
-        // create the confirmation dialog
-        ImportBookDialogFragment importDialog = new ImportBookDialogFragment();
-        importDialog.setBookTitle(title);
-        importDialog.setAuthor(author);
-
-        // create the dialog listener
-        importDialog.setListener(new ImportBookDialogFragment.ImportBookListener() {
             @Override
-            public void onImportBookConfirm(android.support.v4.app.DialogFragment dialog, String title, String author) {
-                book.setTitle(title);
+            protected Book doInBackground(File... files) {
+
+                // create a book and set some defaults
+                final Book book = new Book();
+                book.setUser(ParseUser.getCurrentUser());
+                book.setCurrentPosition(0);
+
+                final ArrayList<AudioFile> audioFiles = new ArrayList<>();
+                String title = "";
+                String author = "";
+
+                // loop through all the files
+                for (File file : files) {
+
+                    String filePath = file.getAbsolutePath();
+
+
+                    // use the MediaFile helper class to determine whether the file is audio
+                    // if not skip and move onto next file
+                    if (!MediaFile.isAudioFileType(MediaFile.getFileType(filePath).fileType)) {
+                        continue;
+                    }
+
+                    // update the progress dialog
+                    publishProgress(file.getName());
+
+                    // use meta data retriever to get title & track number
+                    MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
+                    metadataRetriever.setDataSource(filePath);
+                    title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+                    author = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                    int trackNumber = Integer.valueOf(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
+
+                    // filename = easy
+                    String fileName = file.getName();
+
+                    int duration = 0;
+                    try {
+
+                        // use a media player to get the duration
+                        MediaPlayer mediaPlayer = new MediaPlayer();
+                        mediaPlayer.setDataSource(filePath);
+                        mediaPlayer.prepare();
+                        duration = mediaPlayer.getDuration();
+
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    // create a new audio file with the data we've gathered
+                    AudioFile audioFile = new AudioFile(
+                            fileName,
+                            title,
+                            trackNumber,
+                            false,
+                            duration
+                    );
+
+                    // add the file duration to the overall length of the book
+                    book.incrementLength(duration);
+
+                    // add file to the array list
+                    audioFiles.add(audioFile);
+                    book.setAudioFiles(audioFiles);
+
+                }
+
                 book.setAuthor(author);
-                book.saveInBackground(new SaveCallback() {
+                book.setTitle(title);
+
+                return book;
+            }
+
+            @Override
+            protected void onPostExecute(final Book book) {
+
+                // hide the progress dialog
+                dialog.hide();
+
+                // create the confirmation dialog
+                ImportBookDialogFragment importDialog = new ImportBookDialogFragment();
+                importDialog.setBookTitle(book.getTitle());
+                importDialog.setAuthor(book.getAuthor());
+
+                // create the dialog listener
+                importDialog.setListener(new ImportBookDialogFragment.ImportBookListener() {
                     @Override
-                    public void done(ParseException e) {
+                    public void onImportBookConfirm(android.support.v4.app.DialogFragment dialog, String title, String author) {
+                        book.setTitle(title);
+                        book.setAuthor(author);
+                        book.saveInBackground(new SaveCallback() {
+                            @Override
+                            public void done(ParseException e) {
 
-                        // associate all the audio files with the book and save them
-                        for (AudioFile audioFile : audioFiles) {
-                            audioFile.setBook(book);
-                            audioFile.saveInBackground();
-                        }
+                                // associate all the audio files with the book and save them
+                                for (AudioFile audioFile : book.getAudioFiles()) {
+                                    audioFile.setBook(book);
+                                    audioFile.saveInBackground();
+                                }
 
-                        // create a book path object for this book/installation
-                        BookPath bookPath = new BookPath();
-                        bookPath.setBook(book);
-                        bookPath.setInstallId(Installation.id(context));
-                        bookPath.setPath(directory);
-                        bookPath.saveInBackground();
+                                // create a book path object for this book/installation
+                                BookPath bookPath = new BookPath();
+                                bookPath.setBook(book);
+                                bookPath.setInstallId(Installation.id(context));
+                                bookPath.setPath(directory);
+                                bookPath.saveInBackground();
 
+                            }
+                        });
                     }
                 });
-            }
-        });
 
-        // show the dialog
-        importDialog.show(((MainActivity) context).getSupportFragmentManager(),"ImportDialogFragment");
+                // show the dialog
+                importDialog.show(((MainActivity) context).getSupportFragmentManager(),"ImportDialogFragment");
+
+            }
+
+            @Override
+            protected void onProgressUpdate(String... name) {
+
+                dialog.setMessage(name[0]);
+
+            }
+
+        }.execute(files);
 
     }
 
