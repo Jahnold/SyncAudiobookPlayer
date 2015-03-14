@@ -1,5 +1,6 @@
 package com.jahnold.syncaudiobookplayer.Fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.R;
 import com.parse.LogInCallback;
 import com.parse.ParseException;
@@ -80,11 +82,10 @@ public class LogInFragment extends android.support.v4.app.Fragment {
 
                         if (user != null) {
 
-                            // log in success, switch to feed fragment
-                            getFragmentManager()
-                                    .beginTransaction()
-                                    .replace(R.id.container, new BookListFragment(), "BookListFragment")
-                                    .commit();
+                            // log in success, switch main activity
+                            Intent intent = new Intent(getActivity(), MainActivity.class);
+                            startActivity(intent);
+
                         }
                         else {
 

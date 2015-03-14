@@ -15,6 +15,8 @@
     <string name="hint_last_name">last name</string>
     <string name="hint_question">question</string>
     <string name="hint_answer">answer</string>
+    <string name="hint_book_name">title</string>
+    <string name="hint_author">author</string>
 
     <string name="btn_login">Login</string>
     <string name="btn_register">Register</string>
@@ -32,4 +34,10 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+    <string name="title_activity_auth">AuthActivity</string>
+
+    <string name="title_progress_dialog">Importing Book</string>
+    <string name="title_import_book_dialog">Import Book</string>
+
+    <string name="hello_world">Hello world!</string>
 </resources>

@@ -1,11 +1,14 @@
 package com.jahnold.syncaudiobookplayer.Activities;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.jahnold.syncaudiobookplayer.Fragments.LogInFragment;
 import com.jahnold.syncaudiobookplayer.R;
+import com.parse.ParseUser;
 
 public class AuthActivity extends ActionBarActivity {
 
@@ -13,6 +16,24 @@ public class AuthActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
+
+        // check for a user
+        if (ParseUser.getCurrentUser() == null) {
+
+            // no user, show the login screen
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.container, new LogInFragment(), "LogInFragment")
+                    .commit();
+        }
+        else {
+
+            // already a user move on to main activity
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+
+        }
+
     }
 
 

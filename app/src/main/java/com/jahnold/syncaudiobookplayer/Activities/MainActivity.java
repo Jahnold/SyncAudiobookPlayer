@@ -1,5 +1,6 @@
 package com.jahnold.syncaudiobookplayer.Activities;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
@@ -33,10 +34,9 @@ public class MainActivity extends ActionBarActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
 
         // set up the nav draw
         mNavigationDrawerFragment = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
@@ -46,24 +46,11 @@ public class MainActivity extends ActionBarActivity
                 (DrawerLayout) findViewById(R.id.drawer_layout)
         );
 
-        // check if a user is logged in
-        if (ParseUser.getCurrentUser() == null) {
-
-            // no user - show log-in fragment
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.container, new LogInFragment(), "BookListFragment")
-                    .commit();
-        }
-        else {
-
-            // show the book list fragment
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.container, new BookListFragment(), "BookListFragment")
-                    .commit();
-        }
-
+        // show the book list fragment
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container, new BookListFragment(), "BookListFragment")
+                .commit();
 
     }
 
@@ -83,10 +70,8 @@ public class MainActivity extends ActionBarActivity
             // don't show hidden dirs
             fileExploreIntent.putExtra(FileBrowserActivity.showCannotReadParameter, false);
 
-            startActivityForResult(
-                    fileExploreIntent,
-                    454
-            );
+            // start the activity
+            startActivityForResult(fileExploreIntent, 454);
 
         }
 
@@ -171,9 +156,14 @@ public class MainActivity extends ActionBarActivity
 
         if (requestCode == 454 && resultCode == MainActivity.RESULT_OK && data != null) {
 
+            // create a progress dialog
+            ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setTitle(getString(R.string.title_progress_dialog));
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.show();
 
             String directory = data.getStringExtra(FileBrowserActivity.returnDirectoryParameter);
-            Book.createFromLocal(directory);
+            Book.createFromLocal(this, directory, progressDialog);
         }
     }
 
