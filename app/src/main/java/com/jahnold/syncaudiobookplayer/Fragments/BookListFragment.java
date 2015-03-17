@@ -61,6 +61,9 @@ public class BookListFragment extends Fragment {
                         .replace(R.id.container, playbackFragment, "PlaybackFragment")
                         .addToBackStack(null)
                         .commit();
+
+                // tell the activity which book was selected
+                ((PlaybackFragment.PlaybackControls) getActivity()).setBook(book);
             }
         });
 
@@ -70,6 +73,7 @@ public class BookListFragment extends Fragment {
             public void done(List<Book> books, ParseException e) {
 
                 if (e == null) {
+                    mAdapter.clear();
                     mAdapter.addAll(books);
                 }
                 else {

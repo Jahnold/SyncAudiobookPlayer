@@ -1,5 +1,6 @@
 package com.jahnold.syncaudiobookplayer.Fragments;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -19,13 +20,38 @@ import com.jahnold.syncaudiobookplayer.R;
  */
 public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
+    public interface PlaybackControls {
+
+        public void setBook(Book book);
+        public void onPlayPauseClick();
+        public void onBackClick();
+        public void onSpecialPauseClick();
+        public void onForwardClick();
+
+    }
+
     private Book mBook;
+    private PlaybackControls mCallbacks;
 
     // empty constructor
     public PlaybackFragment() {}
 
     // setters
-    public void setBook(Book book) { mBook = book; }
+    public void setBook(Book book) {
+
+        mBook = book;
+
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+
+        super.onAttach(activity);
+
+        // get a ref to the interface methods in the activity
+        mCallbacks = (PlaybackControls) activity;
+
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -65,41 +91,28 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
     /**
     *   Route the onClick events to the appropriate method
+    *   Uses the callback interface to call activity methods
     */
     @Override
     public void onClick(View v) {
 
         switch (v.getId()) {
             case R.id.btn_back:
-                onBackClick();
+                mCallbacks.onBackClick();
                 break;
             case R.id.btn_forward:
-                onForwardClick();
+                mCallbacks.onForwardClick();
                 break;
             case R.id.btn_play_pause:
-                onPlayPauseClick();
+                mCallbacks.onPlayPauseClick();
                 break;
             case R.id.btn_special_pause:
-                onSpecialPauseClick();
+                mCallbacks.onSpecialPauseClick();
                 break;
         }
     }
 
-    public void onPlayPauseClick() {
 
-    }
-
-    public void onBackClick() {
-
-    }
-
-    public void onSpecialPauseClick() {
-
-    }
-
-    public void onForwardClick() {
-
-    }
 
 
 }

@@ -1,7 +1,12 @@
 package com.jahnold.syncaudiobookplayer.Models;
 
+import com.parse.FindCallback;
 import com.parse.ParseClassName;
 import com.parse.ParseObject;
+import com.parse.ParseQuery;
+import com.parse.ParseUser;
+
+import java.util.ArrayList;
 
 /**
  *  AudioFile Model
@@ -39,4 +44,12 @@ public class AudioFile extends ParseObject {
     public void setListened(boolean listened) { put("listened", listened); }
     public void setLength(int length) {put("length", length); }
 
+    public static void loadForBook(Book book, FindCallback<AudioFile> callback) {
+
+        ParseQuery<AudioFile> query = ParseQuery.getQuery(AudioFile.class);
+        query.whereEqualTo("book", book);
+        query.orderByAscending("trackNumber");
+        query.findInBackground(callback);
+
+    }
 }

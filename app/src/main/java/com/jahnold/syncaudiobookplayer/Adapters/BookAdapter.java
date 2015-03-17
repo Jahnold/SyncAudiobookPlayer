@@ -59,6 +59,8 @@ public class BookAdapter extends ArrayAdapter<Book> {
 
         }
 
+        btnMenu.setFocusable(false);
+
         return convertView;
 
     }

@@ -1,7 +1,11 @@
 package com.jahnold.syncaudiobookplayer.Activities;
 
 import android.app.ProgressDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -12,25 +16,31 @@ import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
 
 import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
-import com.jahnold.syncaudiobookplayer.Fragments.LogInFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.NavigationDrawerFragment;
+import com.jahnold.syncaudiobookplayer.Fragments.PlaybackFragment;
+import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
+import com.jahnold.syncaudiobookplayer.Models.BookPath;
 import com.jahnold.syncaudiobookplayer.R;
-import com.parse.ParseUser;
+import com.jahnold.syncaudiobookplayer.Services.PlayerService;
+import com.parse.FindCallback;
+import com.parse.GetCallback;
+import com.parse.ParseException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks,
+        PlaybackFragment.PlaybackControls {
 
-    /**
-     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-     */
-    private NavigationDrawerFragment mNavigationDrawerFragment;
 
-    /**
-     * Used to store the last screen title. For use in {@link #restoreActionBar()}.
-     */
-    private CharSequence mTitle;
+    private NavigationDrawerFragment mNavigationDrawerFragment;     // nav draw fragment
+    private CharSequence mTitle;                                    // last screen title
+    private PlayerService mPlayerService;
+    private Intent mPlayerIntent;
+    private boolean mPlayerBound = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +62,33 @@ public class MainActivity extends ActionBarActivity
                 .replace(R.id.container, new BookListFragment(), "BookListFragment")
                 .commit();
 
+    }
+
+    // connect to the player service
+    private ServiceConnection playerConnection  = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+
+            PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) service;
+            mPlayerService = binder.getService();
+            mPlayerBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mPlayerBound = false;
+        }
+    };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (mPlayerIntent == null) {
+            mPlayerIntent = new Intent(this, PlayerService.class);
+            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
+            startService(mPlayerIntent);
+        }
     }
 
     @Override
@@ -167,5 +204,57 @@ public class MainActivity extends ActionBarActivity
         }
     }
 
+    /*
+    *   Playback Controls
+    *       Interface
+    */
+
+    public void onPlayPauseClick() {
+        mPlayerService.playAudioFile();
+    }
+
+    public void onBackClick() {
+
+    }
+
+    public void onSpecialPauseClick() {
+
+    }
+
+    public void onForwardClick() {
+
+    }
+
+    public void setBook(Book book) {
+
+        book.getBookPathForCurrentDevice(
+                getApplicationContext(),
+                new GetCallback<BookPath>() {
+                    @Override
+                    public void done(BookPath bookPath, ParseException e) {
+                        if (e == null) {
+                            mPlayerService.setBookPath(bookPath);
+                        }
+                        else {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+        );
+        AudioFile.loadForBook(
+                book,
+                new FindCallback<AudioFile>() {
+                    @Override
+                    public void done(List<AudioFile> audioFiles, ParseException e) {
+                        if (e == null) {
+                            mPlayerService.setAudioFiles((ArrayList<AudioFile>)audioFiles);
+                        }
+                        else {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+        );
+    }
 
 }

@@ -56,8 +56,10 @@
         android:layout_height="wrap_content"/>
 
     <ProgressBar
+        style="@android:style/Widget.Holo.Light.ProgressBar.Horizontal"
         android:id="@+id/progress_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:indeterminate="false"/>
 
 </LinearLayout>

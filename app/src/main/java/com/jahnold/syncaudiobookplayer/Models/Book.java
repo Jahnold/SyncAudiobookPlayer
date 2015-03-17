@@ -12,6 +12,7 @@ import com.jahnold.syncaudiobookplayer.Fragments.ImportBookDialogFragment;
 import com.jahnold.syncaudiobookplayer.Util.Installation;
 import com.jahnold.syncaudiobookplayer.Util.MediaFile;
 import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.ParseClassName;
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -205,15 +206,12 @@ public class Book extends ParseObject {
 
     }
 
-    public static ArrayList<Book> loadAll(FindCallback<Book> callback) {
-
-        ArrayList<Book> books = new ArrayList<>();
+    public static void loadAll(FindCallback<Book> callback) {
 
         ParseQuery<Book> query = ParseQuery.getQuery(Book.class);
         query.whereEqualTo("user", ParseUser.getCurrentUser());
         query.findInBackground(callback);
 
-        return books;
     }
 
     /**
@@ -221,6 +219,15 @@ public class Book extends ParseObject {
      */
     public boolean onDevice() {
         return true;
+    }
+
+    public void getBookPathForCurrentDevice(Context context, GetCallback<BookPath> callback) {
+
+        ParseQuery<BookPath> query = ParseQuery.getQuery(BookPath.class);
+        query.whereEqualTo("book", Book.this);
+        query.whereEqualTo("installId", Installation.id(context));
+        query.getFirstInBackground(callback);
+
     }
 
 }
