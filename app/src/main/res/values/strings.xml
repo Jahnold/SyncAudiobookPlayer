@@ -39,5 +39,8 @@
     <string name="title_progress_dialog">Importing Book</string>
     <string name="title_import_book_dialog">Import Book</string>
 
-    <string name="hello_world">Hello world!</string>
+    <string name="menu_details">View Details</string>
+    <string name="menu_rename">Rename</string>
+    <string name="menu_delete">Delete</string>
+
 </resources>

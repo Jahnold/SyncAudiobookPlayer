@@ -147,12 +147,16 @@ public class Book extends ParseObject {
 
                     // add file to the array list
                     audioFiles.add(audioFile);
-                    book.setAudioFiles(audioFiles);
+
 
                 }
 
+                book.setAudioFiles(audioFiles);
                 book.setAuthor(author);
                 book.setTitle(title);
+                book.setCurrentFilePosition(0);
+                book.setCurrentFile(0);
+                book.setCumulativePosition(0);
 
                 return book;
             }

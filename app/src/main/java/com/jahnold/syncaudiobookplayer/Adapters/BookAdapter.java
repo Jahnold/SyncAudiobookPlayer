@@ -2,11 +2,13 @@ package com.jahnold.syncaudiobookplayer.Adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import com.jahnold.syncaudiobookplayer.Models.Book;
@@ -59,6 +61,18 @@ public class BookAdapter extends ArrayAdapter<Book> {
 
         }
 
+        // create the popup menu
+        final PopupMenu popupMenu = new PopupMenu(getContext(), btnMenu);
+        popupMenu.getMenu().add(Menu.NONE, 0, Menu.NONE, getContext().getString(R.string.menu_details));
+        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE, getContext().getString(R.string.menu_rename));
+        popupMenu.getMenu().add(Menu.NONE, 2, Menu.NONE, getContext().getString(R.string.menu_delete));
+
+        btnMenu.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupMenu.show();
+            }
+        });
         btnMenu.setFocusable(false);
 
         return convertView;

@@ -40,9 +40,7 @@ public class PlayerService extends Service
     private Book mBook;                                 // the book that's being played
     private final IBinder mBinder = new PlayerBinder();
     private boolean mPrepared = false;                  // tracks whether the mediaplayer is prepared
-    private SeekBar mSeekBar;
-    private boolean mUpdateSeekBar = true;              // tracks whether user is touching seekbar
-    //private MediaObserver mMediaObserver;
+
 
     private final String TAG = "Playback Service";
 
@@ -51,8 +49,7 @@ public class PlayerService extends Service
     public void setBookPath(BookPath bookPath) { mBookPath = bookPath; }
     public void setCurrentFile(int currentFile) { mCurrentFile = currentFile; }
     public void setBook(Book book) { mBook = book; }
-    public void setSeekBar(SeekBar seekBar) { mSeekBar = seekBar;}
-    public void setUpdateSeekBar(boolean updateSeekBar) { mUpdateSeekBar = updateSeekBar; }
+
 
     // getters
     public boolean isPlaying() { return mMediaPlayer.isPlaying(); }
@@ -89,7 +86,6 @@ public class PlayerService extends Service
     @Override
     public boolean onUnbind(Intent intent) {
 
-        //mMediaObserver.stop();
         mMediaPlayer.stop();
         mMediaPlayer.release();
 
@@ -101,7 +97,6 @@ public class PlayerService extends Service
 
         mMediaPlayer.stop();
 
-        //mMediaObserver.stop();
         if (mAudioFiles.size() > mBook.getCurrentFile()) {
 
             // set the cumulative total
@@ -134,8 +129,6 @@ public class PlayerService extends Service
         mPrepared = true;
         mp.seekTo(mBook.getCurrentFilePosition());
         mp.start();
-        //mMediaObserver = new MediaObserver();
-        //new Thread(mMediaObserver).start();
 
     }
 
@@ -150,6 +143,7 @@ public class PlayerService extends Service
             // already playing
             mMediaPlayer.pause();
             // save the progress
+            mBook.setCurrentFilePosition(mMediaPlayer.getCurrentPosition());
             mBook.saveInBackground();
             // pause the seek observer
 
@@ -164,7 +158,25 @@ public class PlayerService extends Service
 
     public void seekTo(int position) {
 
-        mMediaPlayer.seekTo(position - mBook.getCumulativePosition());
+        int cumulative = 0;
+
+        // find the file that the position is part of
+        for (int workingFile = 0; workingFile < mAudioFiles.size(); workingFile++) {
+
+            if (position > cumulative && position < cumulative + mAudioFiles.get(workingFile).getLength()) {
+                mBook.setCurrentFile(workingFile);
+                break;
+            }
+            cumulative += mAudioFiles.get(workingFile).getLength();
+
+        }
+
+        // set the new details in the book
+        mBook.setCumulativePosition(cumulative);
+        mBook.setCurrentFilePosition(position - cumulative);
+        mBook.saveInBackground();
+
+        prepare();
 
     }
 
@@ -245,34 +257,5 @@ public class PlayerService extends Service
         }
     }
 
-//    /**
-//     *  MediaObserver updates the seek bar
-//     */
-//    private class MediaObserver implements Runnable {
-//        private AtomicBoolean stop = new AtomicBoolean(false);
-//
-//        public void stop() {
-//            stop.set(true);
-//        }
-//
-//        @Override
-//        public void run() {
-//            while (!stop.get()) {
-//
-//                if (mUpdateSeekBar) {
-//                    mSeekBar.setProgress(mBook.getCumulativePosition() + mMediaPlayer.getCurrentPosition());
-//                }
-//
-//                // update the book
-//                mBook.setCurrentFilePosition(mMediaPlayer.getCurrentPosition());
-//
-//                // sleep
-//                try {
-//                    Thread.sleep(200);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//    }
+
 }

@@ -28,10 +28,25 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
     private ImageButton mBtnPlayPause;
     private SeekBar mSeekBar;
     private TimerTextView mTxtProgress;
-    private boolean mSeekBarTouched = false;
-    private boolean isPlaying = false;
     private PlayerService mPlayerService;
     private Handler mHandler;
+
+    private Runnable mProgressChecker = new Runnable() {
+        @Override
+        public void run() {
+
+            // update timer and seekbar
+            getActivity().runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mSeekBar.setProgress(mPlayerService.getCurrentPosition());
+                    mTxtProgress.setTime(mPlayerService.getCurrentPosition());
+                }
+            });
+
+            mHandler.postDelayed(mProgressChecker, 500);
+        }
+    };
 
     // empty constructor
     public PlaybackFragment() {}
@@ -50,20 +65,12 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
     }
 
-    Runnable mProgressChecker = new Runnable() {
-        @Override
-        public void run() {
 
-            // update timer and seekbar
-            mSeekBar.setProgress(mPlayerService.getCurrentPosition());
-            mTxtProgress.setTime(mPlayerService.getCurrentPosition());
-
-            mHandler.postDelayed(mProgressChecker, 200);
-        }
-    };
 
     private void startProgressChecker() {
-        mProgressChecker.run();
+
+        new Thread(mProgressChecker).start();
+//         mProgressChecker.run();
     }
 
     private void stopProgressChecker() {
@@ -110,25 +117,25 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         mBtnPlayPause.setOnClickListener(this);
         btnSpecialPause.setOnClickListener(this);
 
-        mPlayerService.setSeekBar(mSeekBar);
 
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
                 if (fromUser) {
-                    mPlayerService.seekTo(progress);
+                    mTxtProgress.setTime(progress);
                 }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                mPlayerService.setUpdateSeekBar(false);
+                stopProgressChecker();
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                mPlayerService.setUpdateSeekBar(true);
+                mPlayerService.seekTo(seekBar.getProgress());
+                startProgressChecker();
+
             }
         });
 
@@ -154,10 +161,19 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             case R.id.btn_play_pause:
 
                 // set the icon for play/pause depending on whether the service is current playing
-                mBtnPlayPause.setBackgroundResource((mPlayerService.isPlaying()) ? R.drawable.ic_action_play_arrow : R.drawable.ic_action_pause);
+                // also stop/start the progress checker
+                if (mPlayerService.isPlaying()) {
+                    mBtnPlayPause.setBackgroundResource(R.drawable.ic_action_play_arrow);
+                    stopProgressChecker();
+                }
+                else {
+                    mBtnPlayPause.setBackgroundResource(R.drawable.ic_action_pause);
+                    startProgressChecker();
+                }
+
                 // pass the request to the service
                 mPlayerService.playPause(mBook);
-                startProgressChecker();
+
                 break;
 
             case R.id.btn_special_pause:
