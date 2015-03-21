@@ -7,11 +7,14 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 
 import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.Models.BookPath;
+import com.jahnold.syncaudiobookplayer.R;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -37,9 +40,9 @@ public class PlayerService extends Service
     private Book mBook;                                 // the book that's being played
     private final IBinder mBinder = new PlayerBinder();
     private boolean mPrepared = false;                  // tracks whether the mediaplayer is prepared
-    private boolean mSeekBarAttached = false;           // tracks whether a seek bar is listening
     private SeekBar mSeekBar;
-    private MediaObserver mMediaObserver;
+    private boolean mUpdateSeekBar = true;              // tracks whether user is touching seekbar
+    //private MediaObserver mMediaObserver;
 
     private final String TAG = "Playback Service";
 
@@ -49,6 +52,7 @@ public class PlayerService extends Service
     public void setCurrentFile(int currentFile) { mCurrentFile = currentFile; }
     public void setBook(Book book) { mBook = book; }
     public void setSeekBar(SeekBar seekBar) { mSeekBar = seekBar;}
+    public void setUpdateSeekBar(boolean updateSeekBar) { mUpdateSeekBar = updateSeekBar; }
 
     // getters
     public boolean isPlaying() { return mMediaPlayer.isPlaying(); }
@@ -85,6 +89,7 @@ public class PlayerService extends Service
     @Override
     public boolean onUnbind(Intent intent) {
 
+        //mMediaObserver.stop();
         mMediaPlayer.stop();
         mMediaPlayer.release();
 
@@ -94,7 +99,28 @@ public class PlayerService extends Service
     @Override
     public void onCompletion(MediaPlayer mp) {
 
-        mMediaObserver.stop();
+        mMediaPlayer.stop();
+
+        //mMediaObserver.stop();
+        if (mAudioFiles.size() > mBook.getCurrentFile()) {
+
+            // set the cumulative total
+            int cumulativeTotal = 0;
+            for (int i = 0; i <= mBook.getCurrentFile(); i++) {
+                cumulativeTotal += mAudioFiles.get(i).getLength();
+            }
+            mBook.setCumulativePosition(cumulativeTotal);
+
+            // increment the current file and reset the file position
+            mBook.incrementCurrentFile();
+            mBook.setCurrentFilePosition(0);
+
+            mBook.saveInBackground();
+
+            prepare();
+
+        }
+
     }
 
     @Override
@@ -106,11 +132,10 @@ public class PlayerService extends Service
     public void onPrepared(MediaPlayer mp) {
 
         mPrepared = true;
+        mp.seekTo(mBook.getCurrentFilePosition());
         mp.start();
-        mMediaObserver = new MediaObserver();
-        new Thread(mMediaObserver).start();
-
-
+        //mMediaObserver = new MediaObserver();
+        //new Thread(mMediaObserver).start();
 
     }
 
@@ -121,19 +146,31 @@ public class PlayerService extends Service
             setBookThenBeginPlayback(book);
         }
         else if (mMediaPlayer.isPlaying()) {
+
             // already playing
             mMediaPlayer.pause();
+            // save the progress
+            mBook.saveInBackground();
+            // pause the seek observer
+
         }
         else {
             // paused
             mMediaPlayer.start();
+
         }
+
+    }
+
+    public void seekTo(int position) {
+
+        mMediaPlayer.seekTo(position - mBook.getCumulativePosition());
 
     }
 
     private void setBookThenBeginPlayback(final Book book) {
 
-        this.mBook = book;
+        mBook = book;
 
         // get the bookpath
         book.getBookPathForCurrentDevice(
@@ -178,7 +215,7 @@ public class PlayerService extends Service
         mMediaPlayer.reset();
 
         // get the first audio file
-        AudioFile file = mAudioFiles.get(mCurrentFile);
+        AudioFile file = mAudioFiles.get(mBook.getCurrentFile());
 
         try {
             mMediaPlayer.setDataSource(mBookPath.getPath() + File.separator + file.getFilename());
@@ -190,6 +227,17 @@ public class PlayerService extends Service
 
     }
 
+    public int getCurrentPosition() {
+
+        if (mPrepared) {
+            return mBook.getCumulativePosition() + mMediaPlayer.getCurrentPosition();
+        }
+        else {
+            return 0;
+        }
+
+    }
+
     public class PlayerBinder extends Binder {
 
         public PlayerService getService() {
@@ -197,24 +245,34 @@ public class PlayerService extends Service
         }
     }
 
-
-    private class MediaObserver implements Runnable {
-        private AtomicBoolean stop = new AtomicBoolean(false);
-
-        public void stop() {
-            stop.set(true);
-        }
-
-        @Override
-        public void run() {
-            while (!stop.get()) {
-                mSeekBar.setProgress(mMediaPlayer.getCurrentPosition());
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+//    /**
+//     *  MediaObserver updates the seek bar
+//     */
+//    private class MediaObserver implements Runnable {
+//        private AtomicBoolean stop = new AtomicBoolean(false);
+//
+//        public void stop() {
+//            stop.set(true);
+//        }
+//
+//        @Override
+//        public void run() {
+//            while (!stop.get()) {
+//
+//                if (mUpdateSeekBar) {
+//                    mSeekBar.setProgress(mBook.getCumulativePosition() + mMediaPlayer.getCurrentPosition());
+//                }
+//
+//                // update the book
+//                mBook.setCurrentFilePosition(mMediaPlayer.getCurrentPosition());
+//
+//                // sleep
+//                try {
+//                    Thread.sleep(200);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//    }
 }

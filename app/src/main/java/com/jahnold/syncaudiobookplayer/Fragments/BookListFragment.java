@@ -62,8 +62,7 @@ public class BookListFragment extends Fragment {
                         .addToBackStack(null)
                         .commit();
 
-                // tell the activity which book was selected
-                ((PlaybackFragment.PlaybackControls) getActivity()).setBook(book);
+
             }
         });
 

@@ -22,7 +22,9 @@ import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  *  Book Model
@@ -40,10 +42,11 @@ public class Book extends ParseObject {
     public ParseFile getCover() { return getParseFile("cover"); }
     public ParseUser getUser() { return getParseUser("user"); }
     public int getLength() { return getInt("length"); }
-    public AudioFile getCurrentFile() { return (AudioFile) getParseObject("currentFile"); }
+    public int getCurrentFile() { return getInt("currentFile"); }
     public int getCurrentPosition() { return getInt("currentPosition"); }
     public int getCurrentFilePosition() { return getInt("currentFilePosition"); }
     public ArrayList<AudioFile> getAudioFiles() { return mAudioFiles; }
+    public int getCumulativePosition() { return  getInt("cumulativePosition"); }
 
     // setters
     public void setTitle(String title) { put("title", title); }
@@ -53,21 +56,24 @@ public class Book extends ParseObject {
     public void setCover(ParseFile cover) { put("cover", cover); }
     public void setUser(ParseUser user) { put("user", user ); }
     public void setLength(int length) { put("length", length ); }
-    public void setCurrentFile(AudioFile file) { put("currentFile", file); }
+    public void setCurrentFile(int file) { put("currentFile", file); }
     public void setCurrentPosition(int position) { put("currentPosition", position); }
     public void setCurrentFilePosition(int position) { put("currentFilePosition", position); }
     private void setAudioFiles(ArrayList<AudioFile> files) { mAudioFiles = files; }
+    public void setCumulativePosition(int position) { put("cumulativePosition", position); }
 
     // useful
     public void incrementLength(int length) {
         increment("length", length);
     }
+    public void incrementCurrentFile() { increment("currentFile"); }
 
     public static void createFromLocal(final Context context, final String directory, final ProgressDialog dialog) {
 
         // create a file ref from our returned directory string
         File bookDir = new File(directory);
         File[] files = bookDir.listFiles();
+        Arrays.sort(files);
 
         // make sure that there are files
         if (files == null || files.length < 1) {

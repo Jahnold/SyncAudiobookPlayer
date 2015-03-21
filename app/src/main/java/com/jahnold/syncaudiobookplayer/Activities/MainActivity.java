@@ -33,8 +33,7 @@ import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks,
-        PlaybackFragment.PlaybackControls {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
 
     private NavigationDrawerFragment mNavigationDrawerFragment;     // nav draw fragment
@@ -208,75 +207,5 @@ public class MainActivity extends ActionBarActivity
         }
     }
 
-    /*
-    *   Playback Controls
-    *       Interface
-    */
-
-    public void onPlayPauseClick() {
-
-//        if (!mPlayerService.isPrepared()) {
-//            // not started playing yet
-//            mPlayerService.begin();
-//        }
-//        else if (mPlayerService.isPlaying()) {
-//            // already playing
-//            mPlayerService.pause();
-//        }
-//        else {
-//            // paused
-//            mPlayerService.play();
-//        }
-
-    }
-
-    public void onBackClick() {
-
-    }
-
-    public void onSpecialPauseClick() {
-
-    }
-
-    public void onForwardClick() {
-
-    }
-
-    public void setBook(Book book) {
-
-        book.getBookPathForCurrentDevice(
-                getApplicationContext(),
-                new GetCallback<BookPath>() {
-                    @Override
-                    public void done(BookPath bookPath, ParseException e) {
-                        if (e == null) {
-                            mPlayerService.setBookPath(bookPath);
-                        }
-                        else {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-        );
-        AudioFile.loadForBook(
-                book,
-                new FindCallback<AudioFile>() {
-                    @Override
-                    public void done(List<AudioFile> audioFiles, ParseException e) {
-                        if (e == null) {
-                            mPlayerService.setAudioFiles((ArrayList<AudioFile>)audioFiles);
-                        }
-                        else {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-        );
-        mPlayerService.setBook(book);
-    }
-
-    public void setSeekbar(SeekBar seekbar) {
-        mPlayerService.setSeekBar(seekbar);
-    }
 
 }
