@@ -55,11 +55,26 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"/>
 
-    <ProgressBar
-        style="@android:style/Widget.Holo.Light.ProgressBar.Horizontal"
-        android:id="@+id/progress_bar"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:indeterminate="false"/>
+        android:orientation="horizontal">
+
+        <com.jahnold.syncaudiobookplayer.Views.TimerTextView
+            android:id="@+id/txt_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <com.jahnold.syncaudiobookplayer.Views.TimerTextView
+            android:id="@+id/txt_total"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        </LinearLayout>
+
+    <SeekBar
+        android:id="@+id/seek_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
 </LinearLayout>

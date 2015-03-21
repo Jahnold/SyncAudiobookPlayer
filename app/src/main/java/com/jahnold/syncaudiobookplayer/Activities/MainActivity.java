@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
+import android.widget.SeekBar;
 
 import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.NavigationDrawerFragment;
@@ -41,6 +42,9 @@ public class MainActivity extends ActionBarActivity
     private PlayerService mPlayerService;
     private Intent mPlayerIntent;
     private boolean mPlayerBound = false;
+
+    // getters
+    public PlayerService getPlayerService() { return mPlayerService; }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -210,7 +214,20 @@ public class MainActivity extends ActionBarActivity
     */
 
     public void onPlayPauseClick() {
-        mPlayerService.playAudioFile();
+
+//        if (!mPlayerService.isPrepared()) {
+//            // not started playing yet
+//            mPlayerService.begin();
+//        }
+//        else if (mPlayerService.isPlaying()) {
+//            // already playing
+//            mPlayerService.pause();
+//        }
+//        else {
+//            // paused
+//            mPlayerService.play();
+//        }
+
     }
 
     public void onBackClick() {
@@ -255,6 +272,11 @@ public class MainActivity extends ActionBarActivity
                     }
                 }
         );
+        mPlayerService.setBook(book);
+    }
+
+    public void setSeekbar(SeekBar seekbar) {
+        mPlayerService.setSeekBar(seekbar);
     }
 
 }
