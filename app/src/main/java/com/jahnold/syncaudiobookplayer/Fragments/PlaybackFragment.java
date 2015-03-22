@@ -6,10 +6,14 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -30,6 +34,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
     private TimerTextView mTxtProgress;
     private PlayerService mPlayerService;
     private Handler mHandler;
+    private PopupMenu mSpecialPauseMenu;
 
     private Runnable mProgressChecker = new Runnable() {
         @Override
@@ -39,8 +44,11 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mSeekBar.setProgress(mPlayerService.getCurrentPosition());
-                    mTxtProgress.setTime(mPlayerService.getCurrentPosition());
+                    if (mPlayerService.getCurrentPosition() != -1) {
+                        mSeekBar.setProgress(mPlayerService.getCurrentPosition());
+                        mTxtProgress.setTime(mPlayerService.getCurrentPosition());
+                    }
+
                 }
             });
 
@@ -68,9 +76,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
 
     private void startProgressChecker() {
-
         new Thread(mProgressChecker).start();
-//         mProgressChecker.run();
     }
 
     private void stopProgressChecker() {
@@ -104,10 +110,14 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             txtTitle.setText(mBook.getTitle());
             txtAuthor.setText(mBook.getAuthor());
             txtTotal.setTime(mBook.getLength());
-            mTxtProgress.setTime(mBook.getCurrentPosition());
+            mTxtProgress.setTime(mBook.getCumulativePosition() + mBook.getCurrentFilePosition());
+
+            if (mBook.getCover() == null) {
+                imgCover.setImageResource(R.drawable.book);
+            }
 
             mSeekBar.setMax(mBook.getLength());
-            mSeekBar.setProgress(mBook.getCurrentPosition());
+            mSeekBar.setProgress(mBook.getCumulativePosition() + mBook.getCurrentFilePosition());
 
         }
 
@@ -118,6 +128,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         btnSpecialPause.setOnClickListener(this);
 
 
+        // set the seek listener
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -144,18 +155,18 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
     /**
     *   Route the onClick events to the appropriate method
-    *   Uses the callback interface to call activity methods
+    *
     */
     @Override
     public void onClick(View v) {
 
         switch (v.getId()) {
             case R.id.btn_back:
-
+                mPlayerService.seekTo(mPlayerService.getCurrentPosition() - 60000);
                 break;
 
             case R.id.btn_forward:
-
+                mPlayerService.seekTo(mPlayerService.getCurrentPosition() + 60000);
                 break;
 
             case R.id.btn_play_pause:
@@ -178,6 +189,14 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
             case R.id.btn_special_pause:
 
+                PauseDialogFragment pauseDialogFragment = new PauseDialogFragment();
+                pauseDialogFragment.setListener(new PauseDialogFragment.PauseDialogListener() {
+                    @Override
+                    public void onPauseConfirm(int pauseType, int timerLength, boolean continueOnNudge) {
+
+                    }
+                });
+                pauseDialogFragment.show(getFragmentManager(), "PauseDialogFragment");
                 break;
         }
     }

@@ -38,9 +38,17 @@
 
     <string name="title_progress_dialog">Importing Book</string>
     <string name="title_import_book_dialog">Import Book</string>
+    <string name="title_pause_dialog">Set Pause</string>
+
+    <string name="label_nudge">Nudge to Resume</string>
+    <string name="label_pause_eof">Pause After Current File</string>
+    <string name="label_pause_timer">Pause After</string>
+    <string name="label_pause_minutes">Minutes</string>
 
     <string name="menu_details">View Details</string>
     <string name="menu_rename">Rename</string>
     <string name="menu_delete">Delete</string>
+    <string name="menu_pause_eof">Pause at End of File</string>
+    <string name="menu_pause_timer">Set Pause Timer</string>
 
 </resources>

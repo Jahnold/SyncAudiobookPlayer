@@ -7,14 +7,10 @@ import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
-import android.util.Log;
-import android.widget.ImageButton;
-import android.widget.SeekBar;
 
 import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.Models.BookPath;
-import com.jahnold.syncaudiobookplayer.R;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -23,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *  Audio Playback Service
@@ -34,20 +29,16 @@ public class PlayerService extends Service
                 MediaPlayer.OnCompletionListener {
 
     private MediaPlayer mMediaPlayer;
-    private int mCurrentFile;                           // current audio file in the array
     private ArrayList<AudioFile> mAudioFiles;           // array of playlist of audio files
     private BookPath mBookPath;                         // path to the files on this install
     private Book mBook;                                 // the book that's being played
     private final IBinder mBinder = new PlayerBinder();
-    private boolean mPrepared = false;                  // tracks whether the mediaplayer is prepared
+    private boolean mPrepared = false;                  // tracks whether the media player is prepared
 
 
-    private final String TAG = "Playback Service";
+    //private final String TAG = "Playback Service";
 
     // setters
-    public void setAudioFiles(ArrayList<AudioFile> files) { mAudioFiles = files; }
-    public void setBookPath(BookPath bookPath) { mBookPath = bookPath; }
-    public void setCurrentFile(int currentFile) { mCurrentFile = currentFile; }
     public void setBook(Book book) { mBook = book; }
 
 
@@ -60,7 +51,6 @@ public class PlayerService extends Service
 
         super.onCreate();
 
-        mCurrentFile = 0;
         mMediaPlayer = new MediaPlayer();
         initMediaPlayer();
     }
@@ -176,6 +166,7 @@ public class PlayerService extends Service
         mBook.setCurrentFilePosition(position - cumulative);
         mBook.saveInBackground();
 
+
         prepare();
 
     }
@@ -184,7 +175,7 @@ public class PlayerService extends Service
 
         mBook = book;
 
-        // get the bookpath
+        // get the bookPath
         book.getBookPathForCurrentDevice(
                 getApplicationContext(),
                 new GetCallback<BookPath>() {
@@ -224,6 +215,7 @@ public class PlayerService extends Service
 
     private void prepare() {
 
+        mPrepared = false;
         mMediaPlayer.reset();
 
         // get the first audio file
@@ -245,7 +237,7 @@ public class PlayerService extends Service
             return mBook.getCumulativePosition() + mMediaPlayer.getCurrentPosition();
         }
         else {
-            return 0;
+            return -1;
         }
 
     }
