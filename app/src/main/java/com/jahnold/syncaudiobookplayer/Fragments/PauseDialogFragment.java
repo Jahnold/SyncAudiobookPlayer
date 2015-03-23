@@ -25,8 +25,9 @@ public class PauseDialogFragment extends DialogFragment {
         public void onPauseConfirm(int pauseType, int timerLength, boolean continueOnNudge);
     }
 
-    private static final int PAUSE_END_OF_FILE = 0;
-    private static final int PAUSE_TIMER = 1;
+    public static final int PAUSE_NONE = -1;
+    public static final int PAUSE_END_OF_FILE = 0;
+    public static final int PAUSE_TIMER = 1;
 
     private PauseDialogListener mListener;
 
@@ -73,18 +74,34 @@ public class PauseDialogFragment extends DialogFragment {
         // set up the radio buttons
         final RadioButton radEOF = (RadioButton) v.findViewById(R.id.radio_eof);
         final RadioButton radTimer = (RadioButton) v.findViewById(R.id.radio_timer);
+        final RadioButton radNone = (RadioButton) v.findViewById(R.id.radio_none);
 
         // programmatically make the radio buttons act as a group
         radEOF.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                radTimer.setChecked(!isChecked);
+                if (isChecked) {
+                    radTimer.setChecked(false);
+                    radNone.setChecked(false);
+                }
             }
         });
         radTimer.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                radEOF.setChecked(!isChecked);
+                if (isChecked) {
+                    radEOF.setChecked(false);
+                    radNone.setChecked(false);
+                }
+            }
+        });
+        radNone.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    radTimer.setChecked(false);
+                    radEOF.setChecked(false);
+                }
             }
         });
 
@@ -97,7 +114,17 @@ public class PauseDialogFragment extends DialogFragment {
                 CheckBox nudge = (CheckBox) getDialog().findViewById(R.id.chk_nudge);
 
                 // get the pause type and length
-                int pauseType = (radEOF.isChecked()) ? PAUSE_END_OF_FILE : PAUSE_TIMER;
+                int pauseType;
+                if (radEOF.isChecked()) {
+                    pauseType = PAUSE_END_OF_FILE;
+                }
+                else if (radTimer.isChecked()) {
+                    pauseType = PAUSE_TIMER;
+                }
+                else {
+                    pauseType = PAUSE_NONE;
+                }
+
                 int time = numHours.getValue() * 60 + numMins.getValue();
 
                 // call the listener confirm method

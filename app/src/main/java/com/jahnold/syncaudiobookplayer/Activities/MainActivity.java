@@ -89,8 +89,33 @@ public class MainActivity extends ActionBarActivity
 
         if (mPlayerIntent == null) {
             mPlayerIntent = new Intent(this, PlayerService.class);
-            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
             startService(mPlayerIntent);
+            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
+
+        }
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+
+        // rebind to the service
+        if (mPlayerIntent == null) {
+            mPlayerIntent = new Intent(this, PlayerService.class);
+            startService(mPlayerIntent);
+            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
+
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        // unbind from the service
+        if (mPlayerBound) {
+            unbindService(playerConnection);
+            mPlayerBound = false;
         }
     }
 
@@ -123,6 +148,12 @@ public class MainActivity extends ActionBarActivity
                 tag = "BookListFragment";
                 break;
 
+            case 3:
+                fragment = getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
+                if (fragment == null) {
+                    fragment = new PlaybackFragment();
+                    ((PlaybackFragment) fragment).setBook(mPlayerService.getBook());
+                }
 
             default:
                 fragment = new BookListFragment();
@@ -194,6 +225,7 @@ public class MainActivity extends ActionBarActivity
 
         super.onActivityResult(requestCode, resultCode, data);
 
+        // return from the file browser
         if (requestCode == 454 && resultCode == MainActivity.RESULT_OK && data != null) {
 
             // create a progress dialog
@@ -204,6 +236,23 @@ public class MainActivity extends ActionBarActivity
 
             String directory = data.getStringExtra(FileBrowserActivity.returnDirectoryParameter);
             Book.createFromLocal(this, directory, progressDialog);
+        }
+
+        // return from the notification
+        if (requestCode == 151) {
+
+            // get the playback fragment or create a new one
+            PlaybackFragment playbackFragment = (PlaybackFragment) getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
+            if (playbackFragment == null) {
+                playbackFragment = new PlaybackFragment();
+                playbackFragment.setBook(mPlayerService.getBook());
+            }
+
+            // show the playback fragment
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container,playbackFragment,"PlaybackFragment")
+                    .commit();
         }
     }
 

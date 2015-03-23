@@ -54,6 +54,43 @@
             android:layout_alignParentLeft="true"
             />
 
+        <TextView
+            android:id="@+id/centre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text=":"
+            android:visibility="invisible"
+            />
+
+        <TextView
+            android:id="@+id/txt_pause"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_pause_in"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:textSize="12sp"
+            android:layout_toLeftOf="@id/centre"
+            android:visibility="invisible"
+            />
+
+
+        <com.jahnold.syncaudiobookplayer.Views.TimerTextView
+            android:id="@+id/txt_pause_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
+            android:textSize="12sp"
+            android:layout_toRightOf="@id/centre"
+            android:visibility="invisible"
+            />
+
         <com.jahnold.syncaudiobookplayer.Views.TimerTextView
             android:id="@+id/txt_total"
             android:layout_width="wrap_content"

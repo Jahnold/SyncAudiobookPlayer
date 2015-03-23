@@ -59,6 +59,10 @@ public class BookAdapter extends ArrayAdapter<Book> {
             txtTitle.setText(item.getTitle());
             txtAuthor.setText(item.getAuthor());
 
+            if (item.getCover() == null) {
+                imgCover.setImageResource(R.drawable.book);
+            }
+
         }
 
         // create the popup menu

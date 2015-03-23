@@ -44,6 +44,8 @@
     <string name="label_pause_eof">Pause After Current File</string>
     <string name="label_pause_timer">Pause After</string>
     <string name="label_pause_minutes">Minutes</string>
+    <string name="label_pause_in">Pause In</string>
+    <string name="label_pause_none">No Pause</string>
 
     <string name="menu_details">View Details</string>
     <string name="menu_rename">Rename</string>

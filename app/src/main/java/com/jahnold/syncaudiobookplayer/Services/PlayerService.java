@@ -1,16 +1,21 @@
 package com.jahnold.syncaudiobookplayer.Services;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.PowerManager;
 
+import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.Models.BookPath;
+import com.jahnold.syncaudiobookplayer.R;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -28,23 +33,61 @@ public class PlayerService extends Service
                 MediaPlayer.OnErrorListener,
                 MediaPlayer.OnCompletionListener {
 
+    private static final int NOTIFICATION_ID = 7;
+
     private MediaPlayer mMediaPlayer;
     private ArrayList<AudioFile> mAudioFiles;           // array of playlist of audio files
     private BookPath mBookPath;                         // path to the files on this install
     private Book mBook;                                 // the book that's being played
     private final IBinder mBinder = new PlayerBinder();
     private boolean mPrepared = false;                  // tracks whether the media player is prepared
+    private boolean mPauseAtEndOfFile = false;          // track whether the user has asked to pause at the end of the current file
+    private int mCountdownRemaining = -1;
+    private CountDownTimer mCountDownTimer;
 
 
     //private final String TAG = "Playback Service";
 
     // setters
     public void setBook(Book book) { mBook = book; }
+    public void setPauseAtEndOfFile(boolean pauseAtEndOfFile) {
+        mPauseAtEndOfFile = pauseAtEndOfFile;
+        // cancel any countdown timers
+        cancelCountdownTimer();
+    }
 
 
     // getters
     public boolean isPlaying() { return mMediaPlayer.isPlaying(); }
     public Book getBook() { return mBook; }
+
+    public int getCountdownRemaining() {
+
+        if (mCountdownRemaining != -1) {
+            // timer countdown
+            return mCountdownRemaining;
+        }
+        else if (mPauseAtEndOfFile) {
+            // end of file countdown
+            return mAudioFiles.get(mBook.getCurrentFile()).getLength() - mMediaPlayer.getCurrentPosition();
+        }
+        else {
+            // no countdown
+            return -1;
+        }
+
+    }
+    public boolean getPauseAtEndOfFile() { return mPauseAtEndOfFile; }
+    public int getCurrentPosition() {
+
+        if (mPrepared) {
+            return mBook.getCumulativePosition() + mMediaPlayer.getCurrentPosition();
+        }
+        else {
+            return -1;
+        }
+
+    }
 
     @Override
     public void onCreate() {
@@ -53,6 +96,15 @@ public class PlayerService extends Service
 
         mMediaPlayer = new MediaPlayer();
         initMediaPlayer();
+
+
+
+
+    }
+
+    @Override
+    public void onDestroy() {
+        stopForeground(true);
     }
 
     /**
@@ -70,14 +122,34 @@ public class PlayerService extends Service
 
     @Override
     public IBinder onBind(Intent intent) {
+
+        // clear any notification
+        stopForeground(true);
+
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
 
-        mMediaPlayer.stop();
-        mMediaPlayer.release();
+        // if service is unbound then show bring it to the foreground and show a notification
+        Intent notificationIntent = new Intent(this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                151,
+                notificationIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        Notification.Builder builder = new Notification.Builder(this);
+        builder.setContentIntent(pendingIntent)
+                .setSmallIcon(R.drawable.ic_action_book)
+                .setOngoing(true)
+                .setContentTitle("hello");
+
+        Notification notification = builder.getNotification();
+        startForeground(NOTIFICATION_ID, notification);
+
 
         return false;
     }
@@ -86,6 +158,12 @@ public class PlayerService extends Service
     public void onCompletion(MediaPlayer mp) {
 
         mMediaPlayer.stop();
+
+        // if the pause at end of file flag is on stop now
+        if (mPauseAtEndOfFile) {
+            mPauseAtEndOfFile = false;
+            return;
+        }
 
         if (mAudioFiles.size() > mBook.getCurrentFile()) {
 
@@ -135,7 +213,6 @@ public class PlayerService extends Service
             // save the progress
             mBook.setCurrentFilePosition(mMediaPlayer.getCurrentPosition());
             mBook.saveInBackground();
-            // pause the seek observer
 
         }
         else {
@@ -231,13 +308,38 @@ public class PlayerService extends Service
 
     }
 
-    public int getCurrentPosition() {
 
-        if (mPrepared) {
-            return mBook.getCumulativePosition() + mMediaPlayer.getCurrentPosition();
-        }
-        else {
-            return -1;
+
+    public void setCountdownTimer(int milliseconds) {
+
+        // cancel any EOF pauses
+        mPauseAtEndOfFile = false;
+
+        // create a new countdown timer
+        mCountDownTimer = new CountDownTimer(milliseconds, 400) {
+
+            @Override
+            public void onTick(long millisUntilFinished) {
+                mCountdownRemaining = (int) millisUntilFinished ;
+            }
+
+            @Override
+            public void onFinish() {
+                if (mMediaPlayer.isPlaying()) {
+                    mMediaPlayer.pause();
+                    // save the progress
+                    mBook.setCurrentFilePosition(mMediaPlayer.getCurrentPosition());
+                    mBook.saveInBackground();
+                }
+                mCountdownRemaining = -1;
+
+            }
+        }.start();
+    }
+
+    public void cancelCountdownTimer() {
+        if (mCountDownTimer != null) {
+            mCountDownTimer.cancel();
         }
 
     }

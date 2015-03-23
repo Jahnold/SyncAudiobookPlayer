@@ -1,6 +1,5 @@
 package com.jahnold.syncaudiobookplayer.Models;
 
-import android.app.DialogFragment;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
@@ -10,7 +9,7 @@ import android.os.AsyncTask;
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Fragments.ImportBookDialogFragment;
 import com.jahnold.syncaudiobookplayer.Util.Installation;
-import com.jahnold.syncaudiobookplayer.Util.MediaFile;
+import com.jahnold.syncaudiobookplayer.Util.Util;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseClassName;
@@ -22,7 +21,6 @@ import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -93,6 +91,11 @@ public class Book extends ParseObject {
                 final ArrayList<AudioFile> audioFiles = new ArrayList<>();
                 String title = "";
                 String author = "";
+                String album = "";
+
+                // create a media player instance that we'll use to get the
+                // duration of any audio files
+                MediaPlayer mediaPlayer = new MediaPlayer();
 
                 // loop through all the files
                 for (File file : files) {
@@ -100,9 +103,9 @@ public class Book extends ParseObject {
                     String filePath = file.getAbsolutePath();
 
 
-                    // use the MediaFile helper class to determine whether the file is audio
+                    // use the helper to find out if this is an audio file
                     // if not skip and move onto next file
-                    if (!MediaFile.isAudioFileType(MediaFile.getFileType(filePath).fileType)) {
+                    if (!Util.isAudioFile(filePath)) {
                         continue;
                     }
 
@@ -114,7 +117,8 @@ public class Book extends ParseObject {
                     metadataRetriever.setDataSource(filePath);
                     title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
                     author = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-                    int trackNumber = Integer.valueOf(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CD_TRACK_NUMBER));
+                    album = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                    int trackNumber = Integer.valueOf(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
 
                     // filename = easy
                     String fileName = file.getName();
@@ -123,11 +127,9 @@ public class Book extends ParseObject {
                     try {
 
                         // use a media player to get the duration
-                        MediaPlayer mediaPlayer = new MediaPlayer();
                         mediaPlayer.setDataSource(filePath);
                         mediaPlayer.prepare();
                         duration = mediaPlayer.getDuration();
-
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -151,9 +153,12 @@ public class Book extends ParseObject {
 
                 }
 
+                // release the mediaplayer
+                mediaPlayer.release();
+
                 book.setAudioFiles(audioFiles);
                 book.setAuthor(author);
-                book.setTitle(title);
+                book.setTitle(album);
                 book.setCurrentFilePosition(0);
                 book.setCurrentFile(0);
                 book.setCumulativePosition(0);

@@ -31,6 +31,7 @@ public class AuthActivity extends ActionBarActivity {
             // already a user move on to main activity
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
+            finish();                       // so that user can't navigate back here
 
         }
 

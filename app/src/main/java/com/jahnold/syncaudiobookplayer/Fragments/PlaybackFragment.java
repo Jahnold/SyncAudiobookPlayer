@@ -6,9 +6,6 @@ import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
@@ -30,11 +27,14 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
     private Book mBook;
     private ImageButton mBtnPlayPause;
+    private ImageButton mBtnSpecialPause;
     private SeekBar mSeekBar;
     private TimerTextView mTxtProgress;
+    private TimerTextView mTxtPause;
+    private TextView mTxtPauseLabel;
+    private TextView mTxtPauseColon;
     private PlayerService mPlayerService;
     private Handler mHandler;
-    private PopupMenu mSpecialPauseMenu;
 
     private Runnable mProgressChecker = new Runnable() {
         @Override
@@ -47,6 +47,12 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
                     if (mPlayerService.getCurrentPosition() != -1) {
                         mSeekBar.setProgress(mPlayerService.getCurrentPosition());
                         mTxtProgress.setTime(mPlayerService.getCurrentPosition());
+                    }
+                    if (mPlayerService.getCountdownRemaining() != -1) {
+                        mTxtPause.setTime(mPlayerService.getCountdownRemaining());
+                    }
+                    else {
+                        setPauseTimerVisibility(View.INVISIBLE);
                     }
 
                 }
@@ -73,7 +79,23 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
 
+        // fragment is no longer visible so stop trying to update the seek bar
+        stopProgressChecker();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // if the service is playing start updating the seek bar
+        if (mPlayerService.isPlaying()) {
+            startProgressChecker();
+        }
+    }
 
     private void startProgressChecker() {
         new Thread(mProgressChecker).start();
@@ -93,11 +115,14 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         ImageView imgCover = (ImageView) v.findViewById(R.id.img_cover);
         ImageButton btnBack = (ImageButton) v.findViewById(R.id.btn_back);
         mBtnPlayPause = (ImageButton) v.findViewById(R.id.btn_play_pause);
-        ImageButton btnSpecialPause = (ImageButton) v.findViewById(R.id.btn_special_pause);
+        mBtnSpecialPause = (ImageButton) v.findViewById(R.id.btn_special_pause);
         ImageButton btnForward = (ImageButton) v.findViewById(R.id.btn_forward);
         TextView txtTitle = (TextView) v.findViewById(R.id.txt_title);
         TextView txtAuthor = (TextView) v.findViewById(R.id.txt_author);
         mTxtProgress = (TimerTextView) v.findViewById(R.id.txt_progress);
+        mTxtPause = (TimerTextView) v.findViewById(R.id.txt_pause_timer);
+        mTxtPauseLabel = (TextView) v.findViewById(R.id.txt_pause);
+        mTxtPauseColon = (TextView) v.findViewById(R.id.centre);
         TimerTextView txtTotal = (TimerTextView) v.findViewById(R.id.txt_total);
         mSeekBar = (SeekBar) v.findViewById(R.id.seek_bar);
 
@@ -125,7 +150,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         btnBack.setOnClickListener(this);
         btnForward.setOnClickListener(this);
         mBtnPlayPause.setOnClickListener(this);
-        btnSpecialPause.setOnClickListener(this);
+        mBtnSpecialPause.setOnClickListener(this);
 
 
         // set the seek listener
@@ -194,6 +219,33 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
                     @Override
                     public void onPauseConfirm(int pauseType, int timerLength, boolean continueOnNudge) {
 
+                        switch (pauseType) {
+
+                            case PauseDialogFragment.PAUSE_END_OF_FILE:
+
+                                // tell the service
+                                mPlayerService.setPauseAtEndOfFile(true);
+                                // make the countdown visible
+                                setPauseTimerVisibility(View.VISIBLE);
+                                break;
+
+                            case PauseDialogFragment.PAUSE_TIMER:
+
+                                // tell the service
+                                mPlayerService.setCountdownTimer(timerLength * 60 * 1000);
+                                // make the countdown visible
+                                setPauseTimerVisibility(View.VISIBLE);
+                                break;
+
+                            case PauseDialogFragment.PAUSE_NONE:
+                                mPlayerService.setPauseAtEndOfFile(false);
+                                mPlayerService.cancelCountdownTimer();
+                                // make the countdown invisible
+                                setPauseTimerVisibility(View.INVISIBLE);
+                                break;
+                        }
+
+
                     }
                 });
                 pauseDialogFragment.show(getFragmentManager(), "PauseDialogFragment");
@@ -201,7 +253,11 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-
+    private void setPauseTimerVisibility(int visibility) {
+        mTxtPause.setVisibility(visibility);
+        mTxtPauseLabel.setVisibility(visibility);
+        mTxtPauseColon.setVisibility(visibility);
+    }
 
 
 }
