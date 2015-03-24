@@ -11,8 +11,10 @@ import android.widget.ListView;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Adapters.BookAdapter;
+import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
+import com.jahnold.syncaudiobookplayer.Services.PlayerService;
 import com.parse.FindCallback;
 import com.parse.ParseException;
 
@@ -54,9 +56,19 @@ public class BookListFragment extends Fragment {
                 // get the clicked book
                 Book book = mAdapter.getItem(position);
 
+                // if it's a new book, update the player service
+                PlayerService playerService = App.getPlayerService();
+                if (!book.equals(playerService.getBook())) {
+                    playerService.pause();
+                    playerService.setBook(book);
+                }
+
                 // switch to the playback fragment
-                PlaybackFragment playbackFragment = new PlaybackFragment();
-                playbackFragment.setBook(book);
+                PlaybackFragment playbackFragment = (PlaybackFragment) getFragmentManager().findFragmentByTag("PlaybackFragment");
+                if (playbackFragment == null) {
+                    playbackFragment = new PlaybackFragment();
+                }
+
                 getFragmentManager()
                         .beginTransaction()
                         .replace(R.id.container, playbackFragment, "PlaybackFragment")

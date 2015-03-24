@@ -42,6 +42,8 @@ public class PlayerService extends Service
     private final IBinder mBinder = new PlayerBinder();
     private boolean mPrepared = false;                  // tracks whether the media player is prepared
     private boolean mPauseAtEndOfFile = false;          // track whether the user has asked to pause at the end of the current file
+    private boolean mPlayAfterPrepare = true;           // whether to begin playback as soon as prepared
+    private boolean mSettingNewBook;
     private int mCountdownRemaining = -1;
     private CountDownTimer mCountDownTimer;
 
@@ -49,7 +51,6 @@ public class PlayerService extends Service
     //private final String TAG = "Playback Service";
 
     // setters
-    public void setBook(Book book) { mBook = book; }
     public void setPauseAtEndOfFile(boolean pauseAtEndOfFile) {
         mPauseAtEndOfFile = pauseAtEndOfFile;
         // cancel any countdown timers
@@ -61,6 +62,10 @@ public class PlayerService extends Service
     public boolean isPlaying() { return mMediaPlayer.isPlaying(); }
     public Book getBook() { return mBook; }
 
+    /**
+     *  If there is a special pause set returns the time left until pause in milliseconds
+     *  If there is no pause set then it will return -1
+     */
     public int getCountdownRemaining() {
 
         if (mCountdownRemaining != -1) {
@@ -77,14 +82,18 @@ public class PlayerService extends Service
         }
 
     }
-    public boolean getPauseAtEndOfFile() { return mPauseAtEndOfFile; }
+
+    /**
+     *  Returns the current position (of the whole book) in milliseconds
+     *  If the media player is current not prepared it returns -1
+     */
     public int getCurrentPosition() {
 
         if (mPrepared) {
             return mBook.getCumulativePosition() + mMediaPlayer.getCurrentPosition();
         }
         else {
-            return -1;
+            return mBook.getCumulativePosition() + mBook.getCurrentFilePosition();
         }
 
     }
@@ -94,8 +103,13 @@ public class PlayerService extends Service
 
         super.onCreate();
 
+        // initialize media player
         mMediaPlayer = new MediaPlayer();
-        initMediaPlayer();
+        mMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mMediaPlayer.setOnPreparedListener(this);
+        mMediaPlayer.setOnCompletionListener(this);
+        mMediaPlayer.setOnErrorListener(this);
 
     }
 
@@ -109,18 +123,6 @@ public class PlayerService extends Service
         stopForeground(true);
     }
 
-    /**
-     *  Initialise the Media PlayerService
-     */
-    public void initMediaPlayer() {
-
-        mMediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mMediaPlayer.setOnPreparedListener(this);
-        mMediaPlayer.setOnCompletionListener(this);
-        mMediaPlayer.setOnErrorListener(this);
-
-    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -168,6 +170,12 @@ public class PlayerService extends Service
             return;
         }
 
+        // if we've just set a new book then stop now
+        if (mSettingNewBook) {
+            mSettingNewBook = false;
+            return;
+        }
+
         if (mAudioFiles.size() > mBook.getCurrentFile()) {
 
             // set the cumulative total
@@ -197,33 +205,38 @@ public class PlayerService extends Service
     @Override
     public void onPrepared(MediaPlayer mp) {
 
-        mPrepared = true;
+
         mp.seekTo(mBook.getCurrentFilePosition());
-        mp.start();
+        mPrepared = true;
+
+        // check whether to being playback
+        if (mPlayAfterPrepare) mp.start();
 
     }
 
-    public void playPause(Book book) {
+    public void togglePlayback() {
 
-        if (book != mBook) {
-            // whole new book
-            setBookThenBeginPlayback(book);
+        mPlayAfterPrepare = true;
+        if (mMediaPlayer.isPlaying()) {
+            pause();
         }
-        else if (mMediaPlayer.isPlaying()) {
+        else {
+            mMediaPlayer.start();
+        }
 
-            // already playing
+    }
+
+    /**
+     *  Pause playback and save position
+     */
+    public void pause() {
+
+        if (mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
             // save the progress
             mBook.setCurrentFilePosition(mMediaPlayer.getCurrentPosition());
             mBook.saveInBackground();
-
         }
-        else {
-            // paused
-            mMediaPlayer.start();
-
-        }
-
     }
 
     public void seekTo(int position) {
@@ -251,7 +264,11 @@ public class PlayerService extends Service
 
     }
 
-    private void setBookThenBeginPlayback(final Book book) {
+    public void setBook(final Book book) {
+
+        // set booleans to control behaviour
+        mSettingNewBook = true;
+        mPlayAfterPrepare = false;
 
         mBook = book;
 
@@ -328,12 +345,7 @@ public class PlayerService extends Service
 
             @Override
             public void onFinish() {
-                if (mMediaPlayer.isPlaying()) {
-                    mMediaPlayer.pause();
-                    // save the progress
-                    mBook.setCurrentFilePosition(mMediaPlayer.getCurrentPosition());
-                    mBook.saveInBackground();
-                }
+                pause();
                 mCountdownRemaining = -1;
 
             }

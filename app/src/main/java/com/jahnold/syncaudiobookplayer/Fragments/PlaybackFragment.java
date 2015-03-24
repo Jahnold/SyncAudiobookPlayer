@@ -62,6 +62,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
                     // update pause countdown if there is one
                     if (mPlayerService.getCountdownRemaining() != -1) {
                         mTxtPause.setTime(mPlayerService.getCountdownRemaining());
+                        setPauseTimerVisibility(View.VISIBLE);
                     } else {
                         setPauseTimerVisibility(View.INVISIBLE);
                     }
@@ -81,41 +82,33 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
     public PlaybackFragment() {}
 
     // setters
-    public void setBook(Book book) { mBook = book; }
+    //public void setBook(Book book) { mBook = book; }
 
     @Override
     public void onAttach(Activity activity) {
 
         super.onAttach(activity);
 
-        // get a ref to the player service
+        // get a ref to the player service and init the handler
         mPlayerService = App.getPlayerService();
-
-        // if the ref is null the service has not yet finished binding in the activity
-        // in this case set a listener for when it has finished binding
-        // for both cases start the progress checker once we've got the service
-        if (mPlayerService != null) {
-            startProgressChecker();
-        }
-//        else {
-//            ((MainActivity) activity).setServiceBoundListener(new MainActivity.ServiceBoundListener() {
-//                @Override
-//                public void onServiceBound(PlayerService service) {
-//                    mPlayerService = service;
-//                    startProgressChecker();
-//                }
-//            });
-//        }
+        mBook = mPlayerService.getBook();
         mHandler = new Handler();
 
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // view should have initialized so start polling the service for details
+        //startProgressChecker();
+    }
 
     @Override
     public void onPause() {
         super.onPause();
 
-        // fragment is no longer visible so stop trying to update the seek bar
+        // fragment is no longer visible so stop polling the service
         stopProgressChecker();
     }
 
@@ -149,8 +142,10 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         mSeekBar = (SeekBar) v.findViewById(R.id.seek_bar);
 
         // set the icon for play/pause depending on whether the service is current playing
-        //mBtnPlayPause.setBackgroundResource((mPlayerService.isPlaying()) ? R.drawable.ic_action_pause : R.drawable.ic_action_play_arrow);
-        mBtnPlayPause.setBackgroundResource(R.drawable.ic_action_pause);
+        mBtnPlayPause.setBackgroundResource((mPlayerService.isPlaying()) ? R.drawable.ic_action_pause : R.drawable.ic_action_play_arrow);
+        //mBtnPlayPause.setBackgroundResource(R.drawable.ic_action_pause);
+
+        startProgressChecker();
 
         // set things from the book
         if (mBook != null) {
@@ -158,16 +153,18 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             txtTitle.setText(mBook.getTitle());
             txtAuthor.setText(mBook.getAuthor());
             txtTotal.setTime(mBook.getLength());
-            mTxtProgress.setTime(mBook.getCumulativePosition() + mBook.getCurrentFilePosition());
+            //mTxtProgress.setTime(mBook.getCumulativePosition() + mBook.getCurrentFilePosition());
 
             if (mBook.getCover() == null) {
                 imgCover.setImageResource(R.drawable.book);
             }
 
             mSeekBar.setMax(mBook.getLength());
-            mSeekBar.setProgress(mBook.getCumulativePosition() + mBook.getCurrentFilePosition());
+            //mSeekBar.setProgress(mBook.getCumulativePosition() + mBook.getCurrentFilePosition());
 
         }
+
+
 
         // set the click listeners
         btnBack.setOnClickListener(this);
@@ -218,8 +215,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
                 break;
 
             case R.id.btn_play_pause:
-                // pass the request to the service
-                mPlayerService.playPause(mBook);
+                mPlayerService.togglePlayback();
                 break;
 
             case R.id.btn_special_pause:
