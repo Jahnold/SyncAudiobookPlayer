@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.jahnold.syncaudiobookplayer.Models.Book;
@@ -52,6 +53,7 @@ public class BookAdapter extends ArrayAdapter<Book> {
         TextView txtPercent = (TextView) convertView.findViewById(R.id.txt_percent);
         ImageView imgCover = (ImageView) convertView.findViewById(R.id.img_cover);
         ImageButton btnMenu = (ImageButton) convertView.findViewById(R.id.btn_menu);
+        ProgressBar progressBar = (ProgressBar) convertView.findViewById(R.id.progress_bar);
 
         if (item != null) {
 
@@ -59,9 +61,14 @@ public class BookAdapter extends ArrayAdapter<Book> {
             txtTitle.setText(item.getTitle());
             txtAuthor.setText(item.getAuthor());
 
+            // set the cover picture
             if (item.getCover() == null) {
                 imgCover.setImageResource(R.drawable.book);
             }
+
+            // set the progress bar
+            progressBar.setMax(item.getLength());
+            progressBar.setProgress(item.getCumulativePosition() + item.getCurrentFilePosition());
 
         }
 

@@ -42,8 +42,7 @@ public class PlayerService extends Service
     private final IBinder mBinder = new PlayerBinder();
     private boolean mPrepared = false;                  // tracks whether the media player is prepared
     private boolean mPauseAtEndOfFile = false;          // track whether the user has asked to pause at the end of the current file
-    private boolean mPlayAfterPrepare = true;           // whether to begin playback as soon as prepared
-    private boolean mSettingNewBook;
+    private boolean mSettingNewBook = false;            // changes behaviour for when a new book is being set up
     private int mCountdownRemaining = -1;
     private CountDownTimer mCountDownTimer;
 
@@ -89,7 +88,7 @@ public class PlayerService extends Service
      */
     public int getCurrentPosition() {
 
-        if (mPrepared) {
+        if (mPrepared  && !mSettingNewBook) {
             return mBook.getCumulativePosition() + mMediaPlayer.getCurrentPosition();
         }
         else {
@@ -172,7 +171,6 @@ public class PlayerService extends Service
 
         // if we've just set a new book then stop now
         if (mSettingNewBook) {
-            mSettingNewBook = false;
             return;
         }
 
@@ -210,13 +208,15 @@ public class PlayerService extends Service
         mPrepared = true;
 
         // check whether to being playback
-        if (mPlayAfterPrepare) mp.start();
+        if (!mSettingNewBook) mp.start();
 
     }
 
     public void togglePlayback() {
 
-        mPlayAfterPrepare = true;
+        // by this point the book is fully set
+        mSettingNewBook = false;
+
         if (mMediaPlayer.isPlaying()) {
             pause();
         }
@@ -268,7 +268,6 @@ public class PlayerService extends Service
 
         // set booleans to control behaviour
         mSettingNewBook = true;
-        mPlayAfterPrepare = false;
 
         mBook = book;
 

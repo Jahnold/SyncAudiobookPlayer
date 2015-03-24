@@ -29,8 +29,12 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
     private SeekBar mSeekBar;
     private TimerTextView mTxtProgress;
     private TimerTextView mTxtPause;
+    private TimerTextView mTxtTotal;
     private TextView mTxtPauseLabel;
     private TextView mTxtPauseColon;
+    private TextView mTxtTitle;
+    private TextView mTxtAuthor;
+    private ImageView mCover;
     private PlayerService mPlayerService;
     private Handler mHandler;
 
@@ -112,6 +116,29 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         stopProgressChecker();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+
+        // if the fragment is being re-used then we need to make sure we've got the correct book
+        // and are showing the correct details for title, author, cover, etc
+        mBook = mPlayerService.getBook();
+
+        if (mBook != null) {
+            mTxtTitle.setText(mBook.getTitle());
+            mTxtAuthor.setText(mBook.getAuthor());
+            mTxtTotal.setTime(mBook.getLength());
+
+            if (mBook.getCover() == null) {
+                mCover.setImageResource(R.drawable.book);
+            }
+
+            mSeekBar.setMax(mBook.getLength());
+        }
+
+    }
+
     private void startProgressChecker() {
         new Thread(mProgressChecker).start();
     }
@@ -127,18 +154,18 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         View v = inflater.inflate(R.layout.fragment_playback,container,false);
 
         // get refs to controls
-        ImageView imgCover = (ImageView) v.findViewById(R.id.img_cover);
+        mCover = (ImageView) v.findViewById(R.id.img_cover);
         ImageButton btnBack = (ImageButton) v.findViewById(R.id.btn_back);
         mBtnPlayPause = (ImageButton) v.findViewById(R.id.btn_play_pause);
         ImageButton btnSpecialPause = (ImageButton) v.findViewById(R.id.btn_special_pause);
         ImageButton btnForward = (ImageButton) v.findViewById(R.id.btn_forward);
-        TextView txtTitle = (TextView) v.findViewById(R.id.txt_title);
-        TextView txtAuthor = (TextView) v.findViewById(R.id.txt_author);
+        mTxtTitle = (TextView) v.findViewById(R.id.txt_title);
+        mTxtAuthor = (TextView) v.findViewById(R.id.txt_author);
         mTxtProgress = (TimerTextView) v.findViewById(R.id.txt_progress);
         mTxtPause = (TimerTextView) v.findViewById(R.id.txt_pause_timer);
         mTxtPauseLabel = (TextView) v.findViewById(R.id.txt_pause);
         mTxtPauseColon = (TextView) v.findViewById(R.id.centre);
-        TimerTextView txtTotal = (TimerTextView) v.findViewById(R.id.txt_total);
+        mTxtTotal = (TimerTextView) v.findViewById(R.id.txt_total);
         mSeekBar = (SeekBar) v.findViewById(R.id.seek_bar);
 
         // set the icon for play/pause depending on whether the service is current playing
@@ -150,13 +177,13 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         // set things from the book
         if (mBook != null) {
 
-            txtTitle.setText(mBook.getTitle());
-            txtAuthor.setText(mBook.getAuthor());
-            txtTotal.setTime(mBook.getLength());
+            mTxtTitle.setText(mBook.getTitle());
+            mTxtAuthor.setText(mBook.getAuthor());
+            mTxtTotal.setTime(mBook.getLength());
             //mTxtProgress.setTime(mBook.getCumulativePosition() + mBook.getCurrentFilePosition());
 
             if (mBook.getCover() == null) {
-                imgCover.setImageResource(R.drawable.book);
+                mCover.setImageResource(R.drawable.book);
             }
 
             mSeekBar.setMax(mBook.getLength());
