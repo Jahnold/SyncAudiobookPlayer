@@ -1,6 +1,7 @@
 package com.jahnold.syncaudiobookplayer.Activities;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -33,23 +34,54 @@ import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks
 
+{
+
+    public interface ServiceBoundListener {
+        public void onServiceBound(PlayerService service);
+    }
+
+    public static String INTENT_PLAYBACK = "com.jahnold.syncaudiobookplayer.playback";
+    public static String INTENT_BOOKLIST = "com.jahnold.syncaudiobookplayer.booklist";
 
     private NavigationDrawerFragment mNavigationDrawerFragment;     // nav draw fragment
     private CharSequence mTitle;                                    // last screen title
-    private PlayerService mPlayerService;
+    private PlayerService mPlayerService;                           // the playback service
     private Intent mPlayerIntent;
     private boolean mPlayerBound = false;
+    private ServiceBoundListener mServiceBoundListener;
 
-    // getters
+    // getters & setters
     public PlayerService getPlayerService() { return mPlayerService; }
+    public void setServiceBoundListener(ServiceBoundListener listener) { mServiceBoundListener = listener; }
+    public NavigationDrawerFragment getNavigationDrawerFragment() { return mNavigationDrawerFragment; }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+//        // start/bind the service
+//        if (mPlayerIntent == null) {
+//            mPlayerIntent = new Intent(this, PlayerService.class);
+//            startService(mPlayerIntent);
+//            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
+//
+//        }
+
+        // check for an intent directing to the playback fragment
+        Intent intent = getIntent();
+        if (INTENT_PLAYBACK.equals(intent.getAction())) {
+
+            if (savedInstanceState == null) {
+                savedInstanceState = new Bundle();
+            }
+
+            // add an item to the bundle to trick the nav draw into loading the playback fragment
+            savedInstanceState.putInt("selected_navigation_drawer_position", 3);
+        }
 
         // set up the nav draw
         mNavigationDrawerFragment = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
@@ -59,70 +91,60 @@ public class MainActivity extends ActionBarActivity
                 (DrawerLayout) findViewById(R.id.drawer_layout)
         );
 
-        // show the book list fragment
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.container, new BookListFragment(), "BookListFragment")
-                .commit();
-
     }
 
-    // connect to the player service
-    private ServiceConnection playerConnection  = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
+//    // connect to the player service
+//    private ServiceConnection playerConnection  = new ServiceConnection() {
+//        @Override
+//        public void onServiceConnected(ComponentName name, IBinder service) {
+//
+//            PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) service;
+//            mPlayerService = binder.getService();
+//            mPlayerBound = true;
+//
+//            // if a fragment has registered a listener for the service run it now
+//            if (mServiceBoundListener != null) {
+//                mServiceBoundListener.onServiceBound(mPlayerService);
+//            }
+//
+//        }
+//
+//        @Override
+//        public void onServiceDisconnected(ComponentName name) {
+//            mPlayerBound = false;
+//        }
+//
+//    };
 
-            PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) service;
-            mPlayerService = binder.getService();
-            mPlayerBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mPlayerBound = false;
-        }
-    };
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        if (mPlayerIntent == null) {
-            mPlayerIntent = new Intent(this, PlayerService.class);
-            startService(mPlayerIntent);
-            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
-
-        }
-    }
 
     @Override
     protected void onRestart() {
         super.onRestart();
 
-        // rebind to the service
-        if (mPlayerIntent == null) {
-            mPlayerIntent = new Intent(this, PlayerService.class);
-            startService(mPlayerIntent);
-            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
-
-        }
+//        // rebind to the service
+//        if (mPlayerIntent == null) {
+//            mPlayerIntent = new Intent(this, PlayerService.class);
+//            startService(mPlayerIntent);
+//            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
+//
+//        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        // unbind from the service
-        if (mPlayerBound) {
-            unbindService(playerConnection);
-            mPlayerBound = false;
-        }
+//        // unbind from the service
+//        if (mPlayerBound) {
+//            unbindService(playerConnection);
+//            mPlayerBound = false;
+//        }
     }
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-        // catch the number 3 because this is an activity rather than a fragment
+        // catch the number 2 because this is an activity rather than a fragment
         if (position == 2) {
 
             Intent fileExploreIntent = new Intent(
@@ -139,35 +161,34 @@ public class MainActivity extends ActionBarActivity
             startActivityForResult(fileExploreIntent, 454);
 
         }
+        else {
 
-        Fragment fragment;
-        String tag;
-        switch (position) {
-            case 0:
-                fragment = new BookListFragment();
-                tag = "BookListFragment";
-                break;
+            // update the main content by replacing fragments
+            FragmentManager fragmentManager = getSupportFragmentManager();
 
-            case 3:
-                fragment = getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
-                if (fragment == null) {
-                    fragment = new PlaybackFragment();
-                    ((PlaybackFragment) fragment).setBook(mPlayerService.getBook());
-                }
+            switch (position) {
+                case 0:
+                    fragmentManager
+                            .beginTransaction()
+                            .replace(R.id.container, new BookListFragment(), "BookListFragment")
+                            .commit();
+                    break;
 
-            default:
-                fragment = new BookListFragment();
-                tag = "BookListFragment";
-                break;
-
+                case 3:
+                    PlaybackFragment playbackFragment = (PlaybackFragment) getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
+                    if (playbackFragment == null) {
+                        playbackFragment = new PlaybackFragment();
+                        //playbackFragment.setBook(mPlayerService.getBook());
+                    }
+                    fragmentManager
+                            .beginTransaction()
+                            .replace(R.id.container, playbackFragment, "PlaybackFragment")
+                            .commit();
+                    break;
+            }
         }
 
-        // update the main content by replacing fragments
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager
-                .beginTransaction()
-                .replace(R.id.container, fragment, tag)
-                .commit();
+
     }
 
     public void onSectionAttached(int number) {
@@ -205,20 +226,6 @@ public class MainActivity extends ActionBarActivity
         return super.onCreateOptionsMenu(menu);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-
-        return super.onOptionsItemSelected(item);
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -238,23 +245,8 @@ public class MainActivity extends ActionBarActivity
             Book.createFromLocal(this, directory, progressDialog);
         }
 
-        // return from the notification
-        if (requestCode == 151) {
-
-            // get the playback fragment or create a new one
-            PlaybackFragment playbackFragment = (PlaybackFragment) getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
-            if (playbackFragment == null) {
-                playbackFragment = new PlaybackFragment();
-                playbackFragment.setBook(mPlayerService.getBook());
-            }
-
-            // show the playback fragment
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.container,playbackFragment,"PlaybackFragment")
-                    .commit();
-        }
     }
+
 
 
 }

@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Adapters.BookAdapter;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
@@ -62,6 +63,8 @@ public class BookListFragment extends Fragment {
                         .addToBackStack(null)
                         .commit();
 
+                // tell the navigation draw that a change has happened
+                ((MainActivity) getActivity()).getNavigationDrawerFragment().setCurrentSelectedPosition(3);
 
             }
         });

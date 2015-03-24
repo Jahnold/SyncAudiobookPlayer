@@ -10,11 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
+import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
 import com.jahnold.syncaudiobookplayer.Services.PlayerService;
@@ -27,7 +26,6 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
     private Book mBook;
     private ImageButton mBtnPlayPause;
-    private ImageButton mBtnSpecialPause;
     private SeekBar mSeekBar;
     private TimerTextView mTxtProgress;
     private TimerTextView mTxtPause;
@@ -36,6 +34,11 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
     private PlayerService mPlayerService;
     private Handler mHandler;
 
+
+    /**
+     *  The progress checker polls the player service every 500 milliseconds
+     *  It updates the playback fragment interface to reflect current playback state
+     */
     private Runnable mProgressChecker = new Runnable() {
         @Override
         public void run() {
@@ -44,20 +47,32 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+
+                    // check to make sure we've got a ref to the service
+                    if (mPlayerService == null) {
+                        return;
+                    }
+
+                    // update the progress
                     if (mPlayerService.getCurrentPosition() != -1) {
                         mSeekBar.setProgress(mPlayerService.getCurrentPosition());
                         mTxtProgress.setTime(mPlayerService.getCurrentPosition());
                     }
+
+                    // update pause countdown if there is one
                     if (mPlayerService.getCountdownRemaining() != -1) {
                         mTxtPause.setTime(mPlayerService.getCountdownRemaining());
-                    }
-                    else {
+                    } else {
                         setPauseTimerVisibility(View.INVISIBLE);
                     }
+
+                    // update the play/pause button to reflect the current playing state
+                    mBtnPlayPause.setBackgroundResource((mPlayerService.isPlaying()) ? R.drawable.ic_action_pause : R.drawable.ic_action_play_arrow);
 
                 }
             });
 
+            // repeat in 500 milliseconds
             mHandler.postDelayed(mProgressChecker, 500);
         }
     };
@@ -74,10 +89,27 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         super.onAttach(activity);
 
         // get a ref to the player service
-        mPlayerService = ((MainActivity) activity).getPlayerService();
+        mPlayerService = App.getPlayerService();
+
+        // if the ref is null the service has not yet finished binding in the activity
+        // in this case set a listener for when it has finished binding
+        // for both cases start the progress checker once we've got the service
+        if (mPlayerService != null) {
+            startProgressChecker();
+        }
+//        else {
+//            ((MainActivity) activity).setServiceBoundListener(new MainActivity.ServiceBoundListener() {
+//                @Override
+//                public void onServiceBound(PlayerService service) {
+//                    mPlayerService = service;
+//                    startProgressChecker();
+//                }
+//            });
+//        }
         mHandler = new Handler();
 
     }
+
 
     @Override
     public void onPause() {
@@ -85,16 +117,6 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
         // fragment is no longer visible so stop trying to update the seek bar
         stopProgressChecker();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        // if the service is playing start updating the seek bar
-        if (mPlayerService.isPlaying()) {
-            startProgressChecker();
-        }
     }
 
     private void startProgressChecker() {
@@ -115,7 +137,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         ImageView imgCover = (ImageView) v.findViewById(R.id.img_cover);
         ImageButton btnBack = (ImageButton) v.findViewById(R.id.btn_back);
         mBtnPlayPause = (ImageButton) v.findViewById(R.id.btn_play_pause);
-        mBtnSpecialPause = (ImageButton) v.findViewById(R.id.btn_special_pause);
+        ImageButton btnSpecialPause = (ImageButton) v.findViewById(R.id.btn_special_pause);
         ImageButton btnForward = (ImageButton) v.findViewById(R.id.btn_forward);
         TextView txtTitle = (TextView) v.findViewById(R.id.txt_title);
         TextView txtAuthor = (TextView) v.findViewById(R.id.txt_author);
@@ -127,7 +149,8 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         mSeekBar = (SeekBar) v.findViewById(R.id.seek_bar);
 
         // set the icon for play/pause depending on whether the service is current playing
-        mBtnPlayPause.setBackgroundResource((mPlayerService.isPlaying()) ? R.drawable.ic_action_pause : R.drawable.ic_action_play_arrow);
+        //mBtnPlayPause.setBackgroundResource((mPlayerService.isPlaying()) ? R.drawable.ic_action_pause : R.drawable.ic_action_play_arrow);
+        mBtnPlayPause.setBackgroundResource(R.drawable.ic_action_pause);
 
         // set things from the book
         if (mBook != null) {
@@ -150,7 +173,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         btnBack.setOnClickListener(this);
         btnForward.setOnClickListener(this);
         mBtnPlayPause.setOnClickListener(this);
-        mBtnSpecialPause.setOnClickListener(this);
+        btnSpecialPause.setOnClickListener(this);
 
 
         // set the seek listener
@@ -195,68 +218,67 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
                 break;
 
             case R.id.btn_play_pause:
-
-                // set the icon for play/pause depending on whether the service is current playing
-                // also stop/start the progress checker
-                if (mPlayerService.isPlaying()) {
-                    mBtnPlayPause.setBackgroundResource(R.drawable.ic_action_play_arrow);
-                    stopProgressChecker();
-                }
-                else {
-                    mBtnPlayPause.setBackgroundResource(R.drawable.ic_action_pause);
-                    startProgressChecker();
-                }
-
                 // pass the request to the service
                 mPlayerService.playPause(mBook);
-
                 break;
 
             case R.id.btn_special_pause:
-
-                PauseDialogFragment pauseDialogFragment = new PauseDialogFragment();
-                pauseDialogFragment.setListener(new PauseDialogFragment.PauseDialogListener() {
-                    @Override
-                    public void onPauseConfirm(int pauseType, int timerLength, boolean continueOnNudge) {
-
-                        switch (pauseType) {
-
-                            case PauseDialogFragment.PAUSE_END_OF_FILE:
-
-                                // tell the service
-                                mPlayerService.setPauseAtEndOfFile(true);
-                                // make the countdown visible
-                                setPauseTimerVisibility(View.VISIBLE);
-                                break;
-
-                            case PauseDialogFragment.PAUSE_TIMER:
-
-                                // tell the service
-                                mPlayerService.setCountdownTimer(timerLength * 60 * 1000);
-                                // make the countdown visible
-                                setPauseTimerVisibility(View.VISIBLE);
-                                break;
-
-                            case PauseDialogFragment.PAUSE_NONE:
-                                mPlayerService.setPauseAtEndOfFile(false);
-                                mPlayerService.cancelCountdownTimer();
-                                // make the countdown invisible
-                                setPauseTimerVisibility(View.INVISIBLE);
-                                break;
-                        }
-
-
-                    }
-                });
-                pauseDialogFragment.show(getFragmentManager(), "PauseDialogFragment");
+                onSpecialPauseClick();
                 break;
         }
     }
 
+    /**
+     *  Hides or shows the controls which make up the pause countdown timer
+     *
+     */
     private void setPauseTimerVisibility(int visibility) {
         mTxtPause.setVisibility(visibility);
         mTxtPauseLabel.setVisibility(visibility);
         mTxtPauseColon.setVisibility(visibility);
+    }
+
+    /**
+     *  Called when the user clicks on special pause button
+     *  Shows the pause dialog fragment with pause options
+     */
+    private void onSpecialPauseClick() {
+
+        PauseDialogFragment pauseDialogFragment = new PauseDialogFragment();
+        pauseDialogFragment.setListener(new PauseDialogFragment.PauseDialogListener() {
+            @Override
+            public void onPauseConfirm(int pauseType, int timerLength, boolean continueOnNudge) {
+
+                switch (pauseType) {
+
+                    case PauseDialogFragment.PAUSE_END_OF_FILE:
+
+                        // tell the service
+                        mPlayerService.setPauseAtEndOfFile(true);
+                        // make the countdown visible
+                        setPauseTimerVisibility(View.VISIBLE);
+                        break;
+
+                    case PauseDialogFragment.PAUSE_TIMER:
+
+                        // tell the service
+                        mPlayerService.setCountdownTimer(timerLength * 60 * 1000);
+                        // make the countdown visible
+                        setPauseTimerVisibility(View.VISIBLE);
+                        break;
+
+                    case PauseDialogFragment.PAUSE_NONE:
+                        mPlayerService.setPauseAtEndOfFile(false);
+                        mPlayerService.cancelCountdownTimer();
+                        // make the countdown invisible
+                        setPauseTimerVisibility(View.INVISIBLE);
+                        break;
+                }
+
+
+            }
+        });
+        pauseDialogFragment.show(getFragmentManager(), "PauseDialogFragment");
     }
 
 

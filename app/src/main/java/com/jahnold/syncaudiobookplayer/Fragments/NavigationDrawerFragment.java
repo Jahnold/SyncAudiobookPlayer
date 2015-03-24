@@ -207,6 +207,18 @@ public class NavigationDrawerFragment extends Fragment {
         }
     }
 
+    /**
+     *  Custom method which updates the navigation draw in cases where
+     *  Fragments are loaded by the system, not by the draw
+     *  Ensures that the correct fragment is reloaded on rotation
+     */
+    public void setCurrentSelectedPosition(int position) {
+        mCurrentSelectedPosition = position;
+        if (mDrawerListView != null) {
+            mDrawerListView.setItemChecked(position, true);
+        }
+    }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);

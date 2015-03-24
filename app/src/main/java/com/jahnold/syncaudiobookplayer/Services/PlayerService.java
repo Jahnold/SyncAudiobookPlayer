@@ -97,9 +97,11 @@ public class PlayerService extends Service
         mMediaPlayer = new MediaPlayer();
         initMediaPlayer();
 
+    }
 
-
-
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
@@ -134,6 +136,7 @@ public class PlayerService extends Service
 
         // if service is unbound then show bring it to the foreground and show a notification
         Intent notificationIntent = new Intent(this, MainActivity.class);
+        notificationIntent.setAction(MainActivity.INTENT_PLAYBACK);
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this,
                 151,
