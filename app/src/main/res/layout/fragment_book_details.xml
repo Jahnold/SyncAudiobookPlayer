@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/img_cover"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_margin="10dp"
+            />
+
+
+        <ImageButton
+            android:id="@+id/btn_edit_cover"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#7fcccccc"
+            android:src="@drawable/ic_action_mode_edit"
+            android:padding="2dp"
+            android:layout_alignBottom="@+id/img_cover"
+            android:layout_alignRight="@+id/img_cover"
+            android:layout_alignEnd="@+id/img_cover"
+            android:layout_alignParentRight="false"/>
+
+        <TextView
+            android:id="@+id/txt_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/img_cover"
+            android:text="Title"
+            android:layout_marginRight="10dp"
+            android:textSize="16sp"
+            android:layout_alignTop="@+id/img_cover"/>
+
+        <ImageButton
+            android:id="@+id/btn_edit_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:src="@drawable/ic_action_mode_edit"
+            android:padding="2dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/txt_title"
+            android:layout_marginRight="10dp"/>
+
+        <TextView
+            android:id="@+id/txt_author"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/img_cover"
+            android:layout_below="@id/txt_title"
+            android:text="Author"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="10dp"/>
+
+        <ImageButton
+            android:id="@+id/btn_edit_author"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:src="@drawable/ic_action_mode_edit"
+            android:padding="2dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignTop="@+id/txt_author"
+            android:layout_marginRight="10dp"/>
+
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/list_files"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+</LinearLayout>

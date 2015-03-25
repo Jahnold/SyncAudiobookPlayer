@@ -90,7 +90,6 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
     @Override
     public void onAttach(Activity activity) {
-
         super.onAttach(activity);
 
         // get a ref to the player service and init the handler
@@ -98,14 +97,6 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         mBook = mPlayerService.getBook();
         mHandler = new Handler();
 
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        // view should have initialized so start polling the service for details
-        //startProgressChecker();
     }
 
     @Override
@@ -119,7 +110,6 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onResume() {
         super.onResume();
-
 
         // if the fragment is being re-used then we need to make sure we've got the correct book
         // and are showing the correct details for title, author, cover, etc
@@ -180,25 +170,19 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             mTxtTitle.setText(mBook.getTitle());
             mTxtAuthor.setText(mBook.getAuthor());
             mTxtTotal.setTime(mBook.getLength());
-            //mTxtProgress.setTime(mBook.getCumulativePosition() + mBook.getCurrentFilePosition());
+            mSeekBar.setMax(mBook.getLength());
 
             if (mBook.getCover() == null) {
                 mCover.setImageResource(R.drawable.book);
             }
 
-            mSeekBar.setMax(mBook.getLength());
-            //mSeekBar.setProgress(mBook.getCumulativePosition() + mBook.getCurrentFilePosition());
-
         }
-
-
 
         // set the click listeners
         btnBack.setOnClickListener(this);
         btnForward.setOnClickListener(this);
         mBtnPlayPause.setOnClickListener(this);
         btnSpecialPause.setOnClickListener(this);
-
 
         // set the seek listener
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {

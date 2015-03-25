@@ -3,6 +3,7 @@ package com.jahnold.syncaudiobookplayer.Adapters;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -12,6 +13,9 @@ import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
+import com.jahnold.syncaudiobookplayer.App;
+import com.jahnold.syncaudiobookplayer.Fragments.BookDetailsFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
 
@@ -75,8 +79,7 @@ public class BookAdapter extends ArrayAdapter<Book> {
         // create the popup menu
         final PopupMenu popupMenu = new PopupMenu(getContext(), btnMenu);
         popupMenu.getMenu().add(Menu.NONE, 0, Menu.NONE, getContext().getString(R.string.menu_details));
-        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE, getContext().getString(R.string.menu_rename));
-        popupMenu.getMenu().add(Menu.NONE, 2, Menu.NONE, getContext().getString(R.string.menu_delete));
+        popupMenu.getMenu().add(Menu.NONE, 1, Menu.NONE, getContext().getString(R.string.menu_delete));
 
         btnMenu.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,6 +88,35 @@ public class BookAdapter extends ArrayAdapter<Book> {
             }
         });
         btnMenu.setFocusable(false);
+
+        // set up the popup menu item click listener
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+
+                switch (menuItem.getItemId()) {
+
+                    case 0:
+
+                        // show the book details
+                        BookDetailsFragment bookDetailsFragment = new BookDetailsFragment();
+                        bookDetailsFragment.setBook(item);
+                        ((MainActivity) getContext()).getSupportFragmentManager()
+                                .beginTransaction()
+                                .replace(R.id.container,bookDetailsFragment, "BookDetailsFragment")
+                                .addToBackStack(null)
+                                .commit();
+
+                        break;
+
+                    case 1:
+
+                        break;
+                }
+
+                return false;
+            }
+        });
 
         return convertView;
 
