@@ -30,7 +30,16 @@ import java.util.Arrays;
 @ParseClassName("Book")
 public class Book extends ParseObject {
 
+    private static MediaPlayer sMediaPlayer;
+    private static Book sBook;
+    private static String sAlbum;
+    private static String sAuthor;
+    private static ArrayList<AudioFile> sAudioFiles;
+    private static int sTrackNumber = 0;
+    private static File sDirectory;
+
     private ArrayList<AudioFile> mAudioFiles = new ArrayList<>();
+
 
     // getters
     public String getTitle() { return getString("title"); }
@@ -41,7 +50,6 @@ public class Book extends ParseObject {
     public ParseUser getUser() { return getParseUser("user"); }
     public int getLength() { return getInt("length"); }
     public int getCurrentFile() { return getInt("currentFile"); }
-    public int getCurrentPosition() { return getInt("currentPosition"); }
     public int getCurrentFilePosition() { return getInt("currentFilePosition"); }
     public ArrayList<AudioFile> getAudioFiles() { return mAudioFiles; }
     public int getCumulativePosition() { return  getInt("cumulativePosition"); }
@@ -53,9 +61,7 @@ public class Book extends ParseObject {
     public void setSeriesNumber(int seriesNumber) { put("seriesNumber", seriesNumber ); }
     public void setCover(ParseFile cover) { put("cover", cover); }
     public void setUser(ParseUser user) { put("user", user ); }
-    public void setLength(int length) { put("length", length ); }
     public void setCurrentFile(int file) { put("currentFile", file); }
-    public void setCurrentPosition(int position) { put("currentPosition", position); }
     public void setCurrentFilePosition(int position) { put("currentFilePosition", position); }
     private void setAudioFiles(ArrayList<AudioFile> files) { mAudioFiles = files; }
     public void setCumulativePosition(int position) { put("cumulativePosition", position); }
@@ -69,101 +75,32 @@ public class Book extends ParseObject {
     public static void createFromLocal(final Context context, final String directory, final ProgressDialog dialog) {
 
         // create a file ref from our returned directory string
-        File bookDir = new File(directory);
-        File[] files = bookDir.listFiles();
-        Arrays.sort(files);
+        sDirectory = new File(directory);
 
-        // make sure that there are files
-        if (files == null || files.length < 1) {
-            return;
-        }
-
-        new AsyncTask<File,String,Book>() {
+        new AsyncTask<Void,String,Book>() {
 
             @Override
-            protected Book doInBackground(File... files) {
+            protected Book doInBackground(Void... nothing) {
 
-                // create a book and set some defaults
-                final Book book = new Book();
-                book.setUser(ParseUser.getCurrentUser());
-                book.setCurrentPosition(0);
+                // set up book, array list and media player
+                sBook = new Book();
+                sAudioFiles = new ArrayList<>();
+                sMediaPlayer = new MediaPlayer();
 
-                final ArrayList<AudioFile> audioFiles = new ArrayList<>();
-                String title = "";
-                String author = "";
-                String album = "";
+                scanDirectory(sDirectory);
 
-                // create a media player instance that we'll use to get the
-                // duration of any audio files
-                MediaPlayer mediaPlayer = new MediaPlayer();
+                // release the media player
+                sMediaPlayer.release();
 
-                // loop through all the files
-                for (File file : files) {
+                sBook.setUser(ParseUser.getCurrentUser());
+                sBook.setAudioFiles(sAudioFiles);
+                sBook.setAuthor(sAuthor);
+                sBook.setTitle(sAlbum);
+                sBook.setCurrentFilePosition(0);
+                sBook.setCurrentFile(0);
+                sBook.setCumulativePosition(0);
 
-                    String filePath = file.getAbsolutePath();
-
-
-                    // use the helper to find out if this is an audio file
-                    // if not skip and move onto next file
-                    if (!Util.isAudioFile(filePath)) {
-                        continue;
-                    }
-
-                    // update the progress dialog
-                    publishProgress(file.getName());
-
-                    // use meta data retriever to get title & track number
-                    MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
-                    metadataRetriever.setDataSource(filePath);
-                    title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-                    author = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-                    album = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-                    int trackNumber = Integer.valueOf(metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM));
-
-                    // filename = easy
-                    String fileName = file.getName();
-
-                    int duration = 0;
-                    try {
-
-                        // use a media player to get the duration
-                        mediaPlayer.setDataSource(filePath);
-                        mediaPlayer.prepare();
-                        duration = mediaPlayer.getDuration();
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    // create a new audio file with the data we've gathered
-                    AudioFile audioFile = new AudioFile(
-                            fileName,
-                            title,
-                            trackNumber,
-                            false,
-                            duration
-                    );
-
-                    // add the file duration to the overall length of the book
-                    book.incrementLength(duration);
-
-                    // add file to the array list
-                    audioFiles.add(audioFile);
-
-
-                }
-
-                // release the mediaplayer
-                mediaPlayer.release();
-
-                book.setAudioFiles(audioFiles);
-                book.setAuthor(author);
-                book.setTitle(album);
-                book.setCurrentFilePosition(0);
-                book.setCurrentFile(0);
-                book.setCumulativePosition(0);
-
-                return book;
+                return sBook;
             }
 
             @Override
@@ -217,9 +154,100 @@ public class Book extends ParseObject {
 
             }
 
-        }.execute(files);
+            /**
+             *  Scans a directory for audio files.
+             *  Will recursively scan any sub directories
+             */
+            private void scanDirectory(File directory) {
+
+                File[] files = directory.listFiles();
+
+                // make sure that there are files
+                if (files == null || files.length < 1) {
+                    return;
+                }
+
+                // sort alphabetically
+                Arrays.sort(files);
+
+                // loop through all the files
+                for (File file : files) {
+
+                    // is this an audio file
+                    if (Util.isAudioFile(file.getName())) {
+
+                        // update the progress dialog
+                        publishProgress(file.getName());
+
+                        // create audio file, increment book length and add to the collection
+                        AudioFile audioFile = createAudioFile(file);
+                        sBook.incrementLength(audioFile.getLength());
+                        sAudioFiles.add(audioFile);
+
+                    }
+
+                    // recursively scan any sub directories
+                    if (file.isDirectory()) {
+                        scanDirectory(file);
+                    }
+
+                }
+            }
+
+            /**
+             *  Gathers all the details from an actual audio file (mp3, etc) and creates
+             *  an AudioFile object
+             */
+            private AudioFile createAudioFile(File file) {
+
+                // use meta data retriever to get file details
+                MediaMetadataRetriever metadataRetriever = new MediaMetadataRetriever();
+                metadataRetriever.setDataSource(file.getAbsolutePath());
+
+                // get these for the book
+                sAuthor = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                sAlbum = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+
+                // these details are for the audio file itself
+                String title = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+
+                // use a media player to get the duration
+                int duration = 0;
+                try {
+                    sMediaPlayer.setDataSource(file.getAbsolutePath());
+                    sMediaPlayer.prepare();
+                    duration = sMediaPlayer.getDuration();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                // increment the track number
+                sTrackNumber++;
+
+                // we need to work out the relative path of this file to the base directory sDirectory
+                String absolutePath = file.getAbsolutePath();
+                String basePath = sDirectory.getAbsolutePath();
+                String filePath = new File(basePath).toURI().relativize(new File(absolutePath).toURI()).getPath();
+
+                // create a new audio file with the data we've gathered
+                return new AudioFile(
+                        filePath,
+                        title,
+                        sTrackNumber,
+                        false,
+                        duration
+                );
+
+            }
+
+        }.execute();
 
     }
+
+
+
+
 
     public static void loadAll(FindCallback<Book> callback) {
 
@@ -244,5 +272,7 @@ public class Book extends ParseObject {
         query.getFirstInBackground(callback);
 
     }
+
+
 
 }

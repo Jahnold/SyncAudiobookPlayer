@@ -39,9 +39,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
         android:layout_marginBottom="20dp"
+        android:layout_toRightOf="@id/img_cover"
         android:layout_alignParentBottom="true"
         >
 
@@ -114,7 +114,8 @@
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
         android:layout_above="@id/timers"
-
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@id/img_cover"
         />
 
     <LinearLayout
@@ -126,7 +127,8 @@
         android:padding="5dp"
         android:layout_above="@id/seek_bar"
         android:layout_alignParentRight="true"
-        android:layout_marginLeft="250dp">
+        android:layout_marginLeft="250dp"
+        >
 
         <ImageButton
             android:id="@+id/btn_back"
