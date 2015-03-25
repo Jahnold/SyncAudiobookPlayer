@@ -40,6 +40,7 @@ public class BookListFragment extends Fragment {
         // get refs
         ListView bookList = (ListView) v.findViewById(R.id.list_books);
 
+
         // set up the adapter and set to to the list view
         mAdapter = new BookAdapter(
                 getActivity(),
@@ -99,4 +100,5 @@ public class BookListFragment extends Fragment {
 
         return v;
     }
+
 }

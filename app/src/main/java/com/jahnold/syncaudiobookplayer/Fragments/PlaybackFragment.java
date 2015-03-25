@@ -1,6 +1,8 @@
 package com.jahnold.syncaudiobookplayer.Fragments;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -18,6 +20,9 @@ import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
 import com.jahnold.syncaudiobookplayer.Services.PlayerService;
 import com.jahnold.syncaudiobookplayer.Views.TimerTextView;
+import com.parse.GetDataCallback;
+import com.parse.ParseException;
+import com.parse.ParseFile;
 
 /**
  *  Playback Fragment
@@ -174,6 +179,21 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
             if (mBook.getCover() == null) {
                 mCover.setImageResource(R.drawable.book);
+            }
+            else {
+                ParseFile cover = mBook.getCover();
+                cover.getDataInBackground(new GetDataCallback() {
+                    @Override
+                    public void done(byte[] bytes, ParseException e) {
+
+                        if (e == null) {
+
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            mCover.setImageBitmap(bitmap);
+
+                        } else { e.printStackTrace(); }
+                    }
+                });
             }
 
         }

@@ -28,18 +28,17 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_marginRight="35dp"
-        android:layout_marginBottom="20dp"
         android:textSize="12sp"
-        android:layout_centerVertical="true"/>
+        android:layout_marginTop="20dp"/>
 
     <com.jahnold.syncaudiobookplayer.Views.TimerTextView
         android:id="@+id/txt_length"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginRight="65dp"
+        android:layout_marginRight="60dp"
         android:layout_alignParentRight="true"
         android:textSize="12sp"
-        android:layout_centerVertical="true"/>
+        android:layout_marginTop="20dp"/>
 
     <ImageButton
         android:id="@+id/btn_menu"
@@ -48,7 +47,7 @@
         android:background="@null"
         android:src="@drawable/ic_action_more_vert"
         android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:layout_marginRight="5dp"/>
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="20dp"/>
 
 </RelativeLayout>

@@ -1,6 +1,8 @@
 package com.jahnold.syncaudiobookplayer.Adapters;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,6 +20,9 @@ import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Fragments.BookDetailsFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
+import com.parse.GetDataCallback;
+import com.parse.ParseException;
+import com.parse.ParseFile;
 
 import java.util.ArrayList;
 
@@ -54,8 +59,7 @@ public class BookAdapter extends ArrayAdapter<Book> {
         // get refs to the interface controls
         TextView txtTitle = (TextView) convertView.findViewById(R.id.txt_title);
         TextView txtAuthor = (TextView) convertView.findViewById(R.id.txt_author);
-        TextView txtPercent = (TextView) convertView.findViewById(R.id.txt_percent);
-        ImageView imgCover = (ImageView) convertView.findViewById(R.id.img_cover);
+        final ImageView imgCover = (ImageView) convertView.findViewById(R.id.img_cover);
         ImageButton btnMenu = (ImageButton) convertView.findViewById(R.id.btn_menu);
         ProgressBar progressBar = (ProgressBar) convertView.findViewById(R.id.progress_bar);
 
@@ -68,6 +72,21 @@ public class BookAdapter extends ArrayAdapter<Book> {
             // set the cover picture
             if (item.getCover() == null) {
                 imgCover.setImageResource(R.drawable.book);
+            }
+            else {
+                ParseFile cover = item.getCover();
+                cover.getDataInBackground(new GetDataCallback() {
+                    @Override
+                    public void done(byte[] bytes, ParseException e) {
+
+                        if (e == null) {
+
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            imgCover.setImageBitmap(bitmap);
+
+                        } else { e.printStackTrace(); }
+                    }
+                });
             }
 
             // set the progress bar

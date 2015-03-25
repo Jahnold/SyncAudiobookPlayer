@@ -33,28 +33,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MainActivity extends ActionBarActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks
+public class MainActivity extends ActionBarActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
-{
-
-    public interface ServiceBoundListener {
-        public void onServiceBound(PlayerService service);
-    }
 
     public static String INTENT_PLAYBACK = "com.jahnold.syncaudiobookplayer.playback";
     public static String INTENT_BOOKLIST = "com.jahnold.syncaudiobookplayer.booklist";
 
     private NavigationDrawerFragment mNavigationDrawerFragment;     // nav draw fragment
     private CharSequence mTitle;                                    // last screen title
-    private PlayerService mPlayerService;                           // the playback service
-    private Intent mPlayerIntent;
-    private boolean mPlayerBound = false;
-    private ServiceBoundListener mServiceBoundListener;
 
     // getters & setters
-    public PlayerService getPlayerService() { return mPlayerService; }
-    public void setServiceBoundListener(ServiceBoundListener listener) { mServiceBoundListener = listener; }
     public NavigationDrawerFragment getNavigationDrawerFragment() { return mNavigationDrawerFragment; }
 
     @Override
@@ -62,14 +50,6 @@ public class MainActivity extends ActionBarActivity
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-//        // start/bind the service
-//        if (mPlayerIntent == null) {
-//            mPlayerIntent = new Intent(this, PlayerService.class);
-//            startService(mPlayerIntent);
-//            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
-//
-//        }
 
         // check for an intent directing to the playback fragment
         Intent intent = getIntent();
@@ -91,54 +71,6 @@ public class MainActivity extends ActionBarActivity
                 (DrawerLayout) findViewById(R.id.drawer_layout)
         );
 
-    }
-
-//    // connect to the player service
-//    private ServiceConnection playerConnection  = new ServiceConnection() {
-//        @Override
-//        public void onServiceConnected(ComponentName name, IBinder service) {
-//
-//            PlayerService.PlayerBinder binder = (PlayerService.PlayerBinder) service;
-//            mPlayerService = binder.getService();
-//            mPlayerBound = true;
-//
-//            // if a fragment has registered a listener for the service run it now
-//            if (mServiceBoundListener != null) {
-//                mServiceBoundListener.onServiceBound(mPlayerService);
-//            }
-//
-//        }
-//
-//        @Override
-//        public void onServiceDisconnected(ComponentName name) {
-//            mPlayerBound = false;
-//        }
-//
-//    };
-
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-
-//        // rebind to the service
-//        if (mPlayerIntent == null) {
-//            mPlayerIntent = new Intent(this, PlayerService.class);
-//            startService(mPlayerIntent);
-//            bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
-//
-//        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-//        // unbind from the service
-//        if (mPlayerBound) {
-//            unbindService(playerConnection);
-//            mPlayerBound = false;
-//        }
     }
 
     @Override
@@ -178,7 +110,6 @@ public class MainActivity extends ActionBarActivity
                     PlaybackFragment playbackFragment = (PlaybackFragment) getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
                     if (playbackFragment == null) {
                         playbackFragment = new PlaybackFragment();
-                        //playbackFragment.setBook(mPlayerService.getBook());
                     }
                     fragmentManager
                             .beginTransaction()

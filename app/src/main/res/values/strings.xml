@@ -39,6 +39,8 @@
     <string name="title_progress_dialog">Importing Book</string>
     <string name="title_import_book_dialog">Import Book</string>
     <string name="title_pause_dialog">Set Pause</string>
+    <string name="title_edit_title">Edit Title</string>
+    <string name="title_edit_author">Edit Author</string>
 
     <string name="label_nudge">Nudge to Resume</string>
     <string name="label_pause_eof">Pause After Current File</string>

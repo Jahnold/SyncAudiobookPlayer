@@ -11,6 +11,8 @@ import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.Models.BookPath;
 import com.jahnold.syncaudiobookplayer.Services.PlayerService;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.parse.Parse;
 import com.parse.ParseObject;
 
@@ -38,6 +40,10 @@ public class App extends Application {
         ParseObject.registerSubclass(BookPath.class);
         Parse.enableLocalDatastore(this);
         Parse.initialize(this, getString(R.string.parse_app_id), getString(R.string.parse_client_key));
+
+        // set up ImageLoader
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this).build();
+        ImageLoader.getInstance().init(config);
 
         // start/bind the service
         if (mPlayerIntent == null) {

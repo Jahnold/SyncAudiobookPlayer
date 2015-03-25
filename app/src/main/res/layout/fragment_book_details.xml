@@ -4,7 +4,7 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <RelativeLayout
+    <com.jahnold.syncaudiobookplayer.Views.ShadowRelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -13,6 +13,7 @@
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:layout_margin="10dp"
+            android:background="@drawable/editable_textview"
             />
 
 
@@ -20,7 +21,7 @@
             android:id="@+id/btn_edit_cover"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="#7fcccccc"
+            android:background="#1ededede"
             android:src="@drawable/ic_action_mode_edit"
             android:padding="2dp"
             android:layout_alignBottom="@+id/img_cover"
@@ -28,49 +29,43 @@
             android:layout_alignEnd="@+id/img_cover"
             android:layout_alignParentRight="false"/>
 
+
         <TextView
             android:id="@+id/txt_title"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@id/img_cover"
             android:text="Title"
+            android:textSize="14sp"
+            android:drawableRight="@drawable/ic_action_chevron_right"
+            android:layout_alignTop="@+id/img_cover"
+            android:layout_toRightOf="@id/img_cover"
+            android:padding="5dp"
             android:layout_marginRight="10dp"
-            android:textSize="16sp"
-            android:layout_alignTop="@+id/img_cover"/>
+            android:layout_marginBottom="10dp"
+            android:scrollHorizontally="false"
+            android:background="@drawable/editable_textview"
+            />
 
-        <ImageButton
-            android:id="@+id/btn_edit_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@null"
-            android:src="@drawable/ic_action_mode_edit"
-            android:padding="2dp"
-            android:layout_alignParentRight="true"
-            android:layout_alignTop="@+id/txt_title"
-            android:layout_marginRight="10dp"/>
+
 
         <TextView
             android:id="@+id/txt_author"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@id/img_cover"
             android:layout_below="@id/txt_title"
             android:text="Author"
-            android:layout_marginTop="20dp"
-            android:layout_marginRight="10dp"/>
+            android:padding="5dp"
+            android:layout_marginRight="10dp"
+            android:drawableRight="@drawable/ic_action_chevron_right"
+            android:scrollHorizontally="false"
+            android:background="@drawable/editable_textview"
+            />
 
-        <ImageButton
-            android:id="@+id/btn_edit_author"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@null"
-            android:src="@drawable/ic_action_mode_edit"
-            android:padding="2dp"
-            android:layout_alignParentRight="true"
-            android:layout_alignTop="@+id/txt_author"
-            android:layout_marginRight="10dp"/>
 
-    </RelativeLayout>
+
+
+    </com.jahnold.syncaudiobookplayer.Views.ShadowRelativeLayout>
 
     <ListView
         android:id="@+id/list_files"
