@@ -151,7 +151,7 @@ public class PlayerService extends Service
                 .setOngoing(true)
                 .setContentTitle("hello");
 
-        Notification notification = builder.getNotification();
+        Notification notification = builder.build();
         startForeground(NOTIFICATION_ID, notification);
 
 
@@ -314,7 +314,7 @@ public class PlayerService extends Service
         mPrepared = false;
         mMediaPlayer.reset();
 
-        // get the first audio file
+        // get the current audio file
         AudioFile file = mAudioFiles.get(mBook.getCurrentFile());
 
         try {

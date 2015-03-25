@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Collections;
 
 //Android imports 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;

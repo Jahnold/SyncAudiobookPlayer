@@ -14,8 +14,6 @@ import android.widget.RadioButton;
 
 import com.jahnold.syncaudiobookplayer.R;
 
-import java.util.Formatter;
-
 /**
  *  Pause Dialog Fragment
  */

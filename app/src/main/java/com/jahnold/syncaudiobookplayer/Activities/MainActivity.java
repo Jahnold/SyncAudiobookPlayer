@@ -1,36 +1,19 @@
 package com.jahnold.syncaudiobookplayer.Activities;
 
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
-import android.widget.SeekBar;
 
 import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.NavigationDrawerFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.PlaybackFragment;
-import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
-import com.jahnold.syncaudiobookplayer.Models.BookPath;
 import com.jahnold.syncaudiobookplayer.R;
-import com.jahnold.syncaudiobookplayer.Services.PlayerService;
-import com.parse.FindCallback;
-import com.parse.GetCallback;
-import com.parse.ParseException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {

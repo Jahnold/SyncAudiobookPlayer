@@ -2,12 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
               android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:clipChildren="false"
-              android:clipToPadding="false"
-    >
+              android:layout_height="match_parent">
 
-    <com.jahnold.syncaudiobookplayer.Views.ShadowRelativeLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -18,7 +15,6 @@
             android:layout_margin="10dp"
             android:background="@drawable/editable_textview"
             />
-
 
         <ImageButton
             android:id="@+id/btn_edit_cover"
@@ -31,7 +27,6 @@
             android:layout_alignRight="@+id/img_cover"
             android:layout_alignEnd="@+id/img_cover"
             android:layout_alignParentRight="false"/>
-
 
         <TextView
             android:id="@+id/txt_title"
@@ -49,8 +44,6 @@
             android:background="@drawable/editable_textview"
             />
 
-
-
         <TextView
             android:id="@+id/txt_author"
             android:layout_width="match_parent"
@@ -65,10 +58,7 @@
             android:background="@drawable/editable_textview"
             />
 
-
-
-
-    </com.jahnold.syncaudiobookplayer.Views.ShadowRelativeLayout>
+    </RelativeLayout>
 
     <ListView
         android:id="@+id/list_files"

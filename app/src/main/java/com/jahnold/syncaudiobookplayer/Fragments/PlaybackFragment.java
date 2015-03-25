@@ -165,7 +165,6 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
         // set the icon for play/pause depending on whether the service is current playing
         mBtnPlayPause.setBackgroundResource((mPlayerService.isPlaying()) ? R.drawable.ic_action_pause : R.drawable.ic_action_play_arrow);
-        //mBtnPlayPause.setBackgroundResource(R.drawable.ic_action_pause);
 
         startProgressChecker();
 

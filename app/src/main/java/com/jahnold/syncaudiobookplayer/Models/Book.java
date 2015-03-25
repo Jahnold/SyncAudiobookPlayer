@@ -30,7 +30,6 @@ import java.util.Arrays;
 @ParseClassName("Book")
 public class Book extends ParseObject {
 
-    private static MediaPlayer sMediaPlayer;
     private static Book sBook;
     private static String sAlbum;
     private static String sAuthor;
@@ -79,23 +78,25 @@ public class Book extends ParseObject {
 
         new AsyncTask<Void,String,Book>() {
 
+            private MediaPlayer mMediaPlayer;
+
             @Override
             protected Book doInBackground(Void... nothing) {
 
                 // set up book, array list and media player
                 sBook = new Book();
                 sAudioFiles = new ArrayList<>();
-                sMediaPlayer = new MediaPlayer();
+                mMediaPlayer = new MediaPlayer();
 
                 scanDirectory(sDirectory);
 
                 // release the media player
-                sMediaPlayer.release();
+                mMediaPlayer.release();
 
                 sBook.setUser(ParseUser.getCurrentUser());
                 sBook.setAudioFiles(sAudioFiles);
-                sBook.setAuthor(sAuthor);
-                sBook.setTitle(sAlbum);
+                if (sAuthor != null) sBook.setAuthor(sAuthor);
+                if (sAlbum != null) sBook.setTitle(sAlbum);
                 sBook.setCurrentFilePosition(0);
                 sBook.setCurrentFile(0);
                 sBook.setCumulativePosition(0);
@@ -174,10 +175,7 @@ public class Book extends ParseObject {
                 for (File file : files) {
 
                     // is this an audio file
-                    if (Util.isAudioFile(file.getName())) {
-
-                        // update the progress dialog
-                        publishProgress(file.getName());
+                    if (Util.isFileType(file.getName(), Util.FILETYPE_AUDIO)) {
 
                         // create audio file, increment book length and add to the collection
                         AudioFile audioFile = createAudioFile(file);
@@ -214,9 +212,10 @@ public class Book extends ParseObject {
                 // use a media player to get the duration
                 int duration = 0;
                 try {
-                    sMediaPlayer.setDataSource(file.getAbsolutePath());
-                    sMediaPlayer.prepare();
-                    duration = sMediaPlayer.getDuration();
+                    mMediaPlayer.setDataSource(file.getAbsolutePath());
+                    mMediaPlayer.prepare();
+                    duration = mMediaPlayer.getDuration();
+                    mMediaPlayer.reset();
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -229,6 +228,9 @@ public class Book extends ParseObject {
                 String absolutePath = file.getAbsolutePath();
                 String basePath = sDirectory.getAbsolutePath();
                 String filePath = new File(basePath).toURI().relativize(new File(absolutePath).toURI()).getPath();
+
+                // update the progress dialog
+                publishProgress(filePath);
 
                 // create a new audio file with the data we've gathered
                 return new AudioFile(

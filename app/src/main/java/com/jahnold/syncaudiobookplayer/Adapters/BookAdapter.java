@@ -16,7 +16,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
-import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Fragments.BookDetailsFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
@@ -49,7 +48,7 @@ public class BookAdapter extends ArrayAdapter<Book> {
         if (convertView == null) {
 
             // inflate the view
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.adapter_book, null);
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.adapter_book, parent);
 
         }
 

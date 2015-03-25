@@ -21,7 +21,6 @@ package com.jahnold.syncaudiobookplayer.Util;
 //import android.media.DecoderCapabilities.AudioDecoder;
 import android.mtp.MtpConstants;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 
 /**

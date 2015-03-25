@@ -1,25 +1,20 @@
 package com.jahnold.syncaudiobookplayer.Fragments;
 
 import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
-import com.jahnold.syncaudiobookplayer.Adapters.BookAdapter;
 import com.jahnold.syncaudiobookplayer.Adapters.FileAdapter;
 import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
@@ -34,10 +29,6 @@ import com.parse.ParseFile;
 import com.parse.SaveCallback;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +59,7 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
         TextView txtAuthor = (TextView) v.findViewById(R.id.txt_author);
         ListView listFiles = (ListView) v.findViewById(R.id.list_files);
 
-        // set the onlclick listeners
+        // set the onclick listeners
         txtAuthor.setOnClickListener(this);
         txtTitle.setOnClickListener(this);
         mCover.setOnClickListener(this);
