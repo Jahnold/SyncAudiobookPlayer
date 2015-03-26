@@ -37,7 +37,6 @@ public class PlayerService extends Service
 
     private MediaPlayer mMediaPlayer;
     private ArrayList<AudioFile> mAudioFiles;           // array of playlist of audio files
-    private BookPath mBookPath;                         // path to the files on this install
     private Book mBook;                                 // the book that's being played
     private final IBinder mBinder = new PlayerBinder();
     private boolean mPrepared = false;                  // tracks whether the media player is prepared
@@ -266,46 +265,29 @@ public class PlayerService extends Service
 
     public void setBook(final Book book) {
 
-        // set booleans to control behaviour
+        // boolean stops playback from starting straight away
+        // also stops the media player from updating the current position until book is prepared
         mSettingNewBook = true;
 
+        // grab the book
         mBook = book;
 
-        // get the bookPath
-        book.getBookPathForCurrentDevice(
-                getApplicationContext(),
-                new GetCallback<BookPath>() {
+        // load the AudioFiles
+        AudioFile.loadForBook(
+                book,
+                new FindCallback<AudioFile>() {
                     @Override
-                    public void done(BookPath bookPath, ParseException e) {
+                    public void done(List<AudioFile> audioFiles, ParseException e) {
                         if (e == null) {
-                            mBookPath = bookPath;
+                            mAudioFiles = (ArrayList<AudioFile>) audioFiles ;
 
-                            // get the audio files
-                            AudioFile.loadForBook(
-                                    book,
-                                    new FindCallback<AudioFile>() {
-                                        @Override
-                                        public void done(List<AudioFile> audioFiles, ParseException e) {
-                                            if (e == null) {
-                                                mAudioFiles = (ArrayList<AudioFile>) audioFiles ;
-
-                                                // prepare for playback
-                                                prepare();
-                                            }
-                                            else {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                    }
-                            );
+                            // prepare for playback
+                            prepare();
                         }
-                        else {
-                            e.printStackTrace();
-                        }
+                        else { e.printStackTrace(); }
                     }
                 }
         );
-
 
     }
 
@@ -318,7 +300,8 @@ public class PlayerService extends Service
         AudioFile file = mAudioFiles.get(mBook.getCurrentFile());
 
         try {
-            mMediaPlayer.setDataSource(mBookPath.getPath() + File.separator + file.getFilename());
+            //mMediaPlayer.setDataSource(mBookPath.getPath() + File.separator + file.getFilename());  <-- old book path version
+            mMediaPlayer.setDataSource(mBook.getPathForCurrentDevice() + File.separator + file.getFilename());
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -21,7 +21,9 @@ import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
 import com.jahnold.syncaudiobookplayer.Services.PlayerService;
 import com.parse.FindCallback;
+import com.parse.GetCallback;
 import com.parse.ParseException;
+import com.parse.ParseQuery;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +31,7 @@ import java.util.List;
 /**
  *  Fragment which lists all books for user
  */
-public class BookListFragment extends Fragment implements DialogInterface.OnClickListener {
+public class BookListFragment extends Fragment {
 
     private BookAdapter mAdapter;
     private ArrayList<Book> mBooks = new ArrayList<>();
@@ -60,18 +62,44 @@ public class BookListFragment extends Fragment implements DialogInterface.OnClic
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                 // get the clicked book
-                Book book = mAdapter.getItem(position);
+                final Book book = mAdapter.getItem(position);
 
                 // check whether the book is on the device
                 if (!book.onDevice()) {
+
+                    DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                            if (which == DialogInterface.BUTTON_POSITIVE) {
+
+                                // create an intent to start the file browser
+                                Intent fileExploreIntent = new Intent(
+                                        FileBrowserActivity.INTENT_ACTION_SELECT_DIR,
+                                        null,
+                                        getActivity(),
+                                        FileBrowserActivity.class
+                                );
+
+                                // don't show hidden dirs
+                                fileExploreIntent.putExtra(FileBrowserActivity.showCannotReadParameter, false);
+                                fileExploreIntent.putExtra("book_id", book.getObjectId());
+
+                                // start the activity
+                                startActivityForResult(fileExploreIntent, 987);
+
+                            }
+                        }
+                    };
+
 
                     // show the import on this device dialog
                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                     builder
                         .setTitle(getString(R.string.title_import_book_dialog))
                         .setMessage("This book has not been imported on the current device.  Do you want to do so now?")
-                        .setPositiveButton("Yes", BookListFragment.this)
-                        .setNegativeButton("Cancel", BookListFragment.this)
+                        .setPositiveButton("Yes", onClickListener)
+                        .setNegativeButton("Cancel", onClickListener)
                         .show();
 
                     // don't continue
@@ -123,33 +151,6 @@ public class BookListFragment extends Fragment implements DialogInterface.OnClic
     }
 
     @Override
-    public void onClick(DialogInterface dialog, int which) {
-
-        switch (which){
-            case DialogInterface.BUTTON_POSITIVE:
-
-                // create an intent to start the file browser
-                Intent fileExploreIntent = new Intent(
-                        FileBrowserActivity.INTENT_ACTION_SELECT_DIR,
-                        null,
-                        getActivity(),
-                        FileBrowserActivity.class
-                );
-
-                // don't show hidden dirs
-                fileExploreIntent.putExtra(FileBrowserActivity.showCannotReadParameter, false);
-
-                // start the activity
-                startActivityForResult(fileExploreIntent, 987);
-                break;
-
-            case DialogInterface.BUTTON_NEGATIVE:
-                //No button clicked
-                break;
-        }
-    }
-
-    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         super.onActivityResult(requestCode, resultCode, data);
@@ -158,13 +159,22 @@ public class BookListFragment extends Fragment implements DialogInterface.OnClic
         if (requestCode == 987 && resultCode == MainActivity.RESULT_OK && data != null) {
 
             // create a progress dialog
-            ProgressDialog progressDialog = new ProgressDialog(getActivity());
+            final ProgressDialog progressDialog = new ProgressDialog(getActivity());
             progressDialog.setTitle(getString(R.string.title_progress_dialog));
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressDialog.show();
 
-            String directory = data.getStringExtra(FileBrowserActivity.returnDirectoryParameter);
-            Book.createFromLocal(getActivity(), directory, progressDialog);
+            final String directory = data.getStringExtra(FileBrowserActivity.returnDirectoryParameter);
+
+            // get the book from the intent
+            ParseQuery<Book> query = ParseQuery.getQuery("Book");
+            query.getInBackground(data.getStringExtra("book_id"), new GetCallback<Book>() {
+                @Override
+                public void done(Book book, ParseException e) {
+                    book.importFromLocal(directory, progressDialog);
+                }
+            });
+
         }
     }
 }

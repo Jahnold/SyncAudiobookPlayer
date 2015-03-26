@@ -389,9 +389,11 @@ public class Book extends ParseObject {
             @Override
             protected void onPostExecute(Void aVoid) {
 
+                dialog.hide();
+
                 if (mAllFilesFound) {
 
-                    // everything worked, make a bookpath
+                    // everything worked, make a BookPath
                     // create a book path object for this book/installation
                     final BookPath bookPath = new BookPath();
                     bookPath.setBook(Book.this);
@@ -409,8 +411,10 @@ public class Book extends ParseObject {
                             newBookPaths.addAll(currentBookPaths);
 
                             // update and save book
-                            Book.this.setBookPaths(newBookPaths);
-                            Book.this.saveInBackground();
+                            mOnDevice = ON_DEVICE_TRUE;
+                            mDevicePath = bookPath.getPath();
+                            setBookPaths(newBookPaths);
+                            saveInBackground();
 
                         }
                     });

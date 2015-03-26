@@ -63,15 +63,15 @@ public class FileBrowserActivity extends ActionBarActivity {
 	ArrayAdapter<Item> adapter;
 
 	private boolean showHiddenFilesAndDirs = true;
-
 	private boolean directoryShownIsEmpty = false;
-
 	private String filterFileExtension = null;
 
 	// Action constants
 	private static int currentAction = -1;
 	private static final int SELECT_DIRECTORY = 1;
 	private static final int SELECT_FILE = 2;
+
+    private String mBookId;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -93,8 +93,10 @@ public class FileBrowserActivity extends ActionBarActivity {
 		}
 
 		showHiddenFilesAndDirs = thisInt.getBooleanExtra(showCannotReadParameter, true);
-
 		filterFileExtension = thisInt.getStringExtra(filterExtension);
+
+        // if a book id has been passed in grab it
+        mBookId = thisInt.getStringExtra("book_id");
 
 		setInitialDirectory();
 
@@ -247,6 +249,9 @@ public class FileBrowserActivity extends ActionBarActivity {
 	private void returnDirectoryFinishActivity() {
 		Intent retIntent = new Intent();
 		retIntent.putExtra(returnDirectoryParameter, path.getAbsolutePath());
+        if (mBookId != null) {
+            retIntent.putExtra("book_id", mBookId);
+        }
 		this.setResult(RESULT_OK, retIntent);
 		this.finish();
 	}
