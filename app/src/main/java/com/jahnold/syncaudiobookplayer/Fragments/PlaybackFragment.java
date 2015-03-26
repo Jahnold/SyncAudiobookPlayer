@@ -42,7 +42,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
     private ImageView mCover;
     private PlayerService mPlayerService;
     private Handler mHandler;
-
+    private boolean mProgressCheckerActive;
 
     /**
      *  The progress checker polls the player service every 500 milliseconds
@@ -124,6 +124,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             mTxtTitle.setText(mBook.getTitle());
             mTxtAuthor.setText(mBook.getAuthor());
             mTxtTotal.setTime(mBook.getLength());
+            mTxtProgress.setTotalTime(mBook.getLength());
 
             if (mBook.getCover() == null) {
                 mCover.setImageResource(R.drawable.book);
@@ -132,14 +133,20 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             mSeekBar.setMax(mBook.getLength());
         }
 
+        startProgressChecker();
+
     }
 
     private void startProgressChecker() {
-        new Thread(mProgressChecker).start();
+
+        if (!mProgressCheckerActive) new Thread(mProgressChecker).start();
+        mProgressCheckerActive = true;
     }
 
     private void stopProgressChecker() {
+
         mHandler.removeCallbacks(mProgressChecker);
+        mProgressCheckerActive = false;
     }
 
 
@@ -174,6 +181,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             mTxtTitle.setText(mBook.getTitle());
             mTxtAuthor.setText(mBook.getAuthor());
             mTxtTotal.setTime(mBook.getLength());
+            mTxtProgress.setTotalTime(mBook.getLength());
             mSeekBar.setMax(mBook.getLength());
 
             if (mBook.getCover() == null) {
@@ -202,6 +210,13 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         btnForward.setOnClickListener(this);
         mBtnPlayPause.setOnClickListener(this);
         btnSpecialPause.setOnClickListener(this);
+
+        mTxtProgress.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mTxtProgress.toggleNegative();
+            }
+        });
 
         // set the seek listener
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -281,6 +296,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
                         // tell the service
                         mPlayerService.setPauseAtEndOfFile(true);
+                        mPlayerService.setContinueOnNudge(continueOnNudge);
                         // make the countdown visible
                         setPauseTimerVisibility(View.VISIBLE);
                         break;
@@ -289,6 +305,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
                         // tell the service
                         mPlayerService.setCountdownTimer(timerLength * 60 * 1000);
+                        mPlayerService.setContinueOnNudge(continueOnNudge);
                         // make the countdown visible
                         setPauseTimerVisibility(View.VISIBLE);
                         break;
@@ -296,6 +313,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
                     case PauseDialogFragment.PAUSE_NONE:
                         mPlayerService.setPauseAtEndOfFile(false);
                         mPlayerService.cancelCountdownTimer();
+                        mPlayerService.setContinueOnNudge(false);
                         // make the countdown invisible
                         setPauseTimerVisibility(View.INVISIBLE);
                         break;

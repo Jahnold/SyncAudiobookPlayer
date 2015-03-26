@@ -27,10 +27,19 @@ import android.os.Environment;
 import android.os.StatFs;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.view.*;
-import android.widget.*;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+//import android.view.*;
+//import android.widget.*;
 
 import com.jahnold.syncaudiobookplayer.R;
 
@@ -48,7 +57,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 	public static final String filterExtension = "ua.com.vassiliev.androidfilebrowser.filterExtension";
 
 	// Stores names of traversed directories
-	ArrayList<String> pathDirsList = new ArrayList<String>();
+	ArrayList<String> pathDirsList = new ArrayList<>();
 
 	// Check if the first level of the directory structure is the one showing
 	// private Boolean firstLvl = true;
@@ -88,7 +97,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 		currentAction = SELECT_DIRECTORY;// This would be a default action in
 											// case not set by intent
 		if (thisInt.getAction().equalsIgnoreCase(INTENT_ACTION_SELECT_FILE)) {
-			Log.d(LOGTAG, "SELECT ACTION - SELECT FILE");
+
 			currentAction = SELECT_FILE;
 		}
 
@@ -106,7 +115,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 		this.initializeButtons();
 		this.initializeFileListView();
 		updateCurrentDirectoryTextView();
-		Log.d(LOGTAG, path.getAbsolutePath());
+
 	}
 
 	private void setInitialDirectory() {
@@ -145,7 +154,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 		Button upDirButton = (Button) this.findViewById(R.id.upDirectoryButton);
 		upDirButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
-				Log.d(LOGTAG, "onclick for upDirButton");
+
 				loadDirectoryUp();
 				loadFileList();
 				adapter.notifyDataSetChanged();
@@ -157,7 +166,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 		if (currentAction == SELECT_DIRECTORY) {
 			selectFolderButton.setOnClickListener(new OnClickListener() {
 				public void onClick(View v) {
-					Log.d(LOGTAG, "onclick for selectFolderButton");
+
 					returnDirectoryFinishActivity();
 				}
 			});
@@ -188,17 +197,6 @@ public class FileBrowserActivity extends ActionBarActivity {
         else {
             ((Button) this.findViewById(R.id.upDirectoryButton)).setEnabled(true);
         }
-		long freeSpace = getFreeSpace(curDirString);
-		String formattedSpaceString = formatBytes(freeSpace);
-
-//        if (freeSpace == 0) {
-//			Log.d(LOGTAG, "NO FREE SPACE");
-//			File currentDir = new File(curDirString);
-//			if(!currentDir.canWrite())
-//				formattedSpaceString = "NON Writable";
-//		}
-
-		//((Button) this.findViewById(R.id.selectCurrentDirectoryButton)).setText("Select\n[" + formattedSpaceString+ "]");
 
 		((TextView) this.findViewById(R.id.currentDirectoryTextView)).setText("Current directory: " + curDirString);
 	}
@@ -210,54 +208,60 @@ public class FileBrowserActivity extends ActionBarActivity {
 	private void initializeFileListView() {
 		ListView lView = (ListView) this.findViewById(R.id.fileListView);
 		lView.setBackgroundColor(Color.LTGRAY);
-		LinearLayout.LayoutParams lParam = new LinearLayout.LayoutParams(
-				LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+		LinearLayout.LayoutParams lParam = new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
 		lParam.setMargins(15, 5, 15, 5);
 		lView.setAdapter(this.adapter);
 		lView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id) {
-				chosenFile = fileList.get(position).file;
+
+            public void onItemClick(AdapterView<?> parent, View view,int position, long id) {
+
+                chosenFile = fileList.get(position).file;
 				File sel = new File(path + "/" + chosenFile);
-				Log.d(LOGTAG, "Clicked:" + chosenFile);
+
 				if (sel.isDirectory()) {
 					if (sel.canRead()) {
 						// Adds chosen directory to list
 						pathDirsList.add(chosenFile);
 						path = new File(sel + "");
-						Log.d(LOGTAG, "Just reloading the list");
+
 						loadFileList();
 						adapter.notifyDataSetChanged();
 						updateCurrentDirectoryTextView();
-						Log.d(LOGTAG, path.getAbsolutePath());
-					} else {
+
+					}
+                    else {
 						showToast("Path does not exist or cannot be read");
 					}
 				}
 				else {
 
-					Log.d(LOGTAG, "item clicked");
+
 					if (!directoryShownIsEmpty) {
-						Log.d(LOGTAG, "File selected:" + chosenFile);
+
 						returnFileFinishActivity(sel.getAbsolutePath());
 					}
 				}
-			}// public void onClick(DialogInterface dialog, int which) {
+			}
 		});
 	}
 
 	private void returnDirectoryFinishActivity() {
-		Intent retIntent = new Intent();
+
+        Intent retIntent = new Intent();
 		retIntent.putExtra(returnDirectoryParameter, path.getAbsolutePath());
+
+        // pass the book id back if we've got it
         if (mBookId != null) {
             retIntent.putExtra("book_id", mBookId);
         }
+
 		this.setResult(RESULT_OK, retIntent);
 		this.finish();
 	}
 
 	private void returnFileFinishActivity(String filePath) {
-		Intent retIntent = new Intent();
+
+        Intent retIntent = new Intent();
 		retIntent.putExtra(returnFileParameter, filePath);
 		this.setResult(RESULT_OK, retIntent);
 		this.finish();
@@ -275,33 +279,31 @@ public class FileBrowserActivity extends ActionBarActivity {
 			FilenameFilter filter = new FilenameFilter() {
 				public boolean accept(File dir, String filename) {
 					File sel = new File(dir, filename);
-					boolean showReadableFile = showHiddenFilesAndDirs
-							|| sel.canRead();
+					boolean showReadableFile = showHiddenFilesAndDirs || sel.canRead();
 					// Filters based on whether the file is hidden or not
 					if (currentAction == SELECT_DIRECTORY) {
-						return (sel.isDirectory() && showReadableFile);
+
+                        return (sel.isDirectory() && showReadableFile);
+
 					}
 					if (currentAction == SELECT_FILE) {
 
 						// If it is a file check the extension if provided
 						if (sel.isFile() && filterFileExtension != null) {
-							return (showReadableFile && sel.getName().endsWith(
-									filterFileExtension));
+							return (showReadableFile && sel.getName().endsWith(filterFileExtension));
 						}
 						return (showReadableFile);
 					}
 					return true;
 				}// public boolean accept(File dir, String filename) {
-			};// FilenameFilter filter = new FilenameFilter() {
+			};
 
 			String[] fList = path.list(filter);
 			this.directoryShownIsEmpty = false;
 			for (int i = 0; i < fList.length; i++) {
 				// Convert into file path
 				File sel = new File(path, fList[i]);
-				Log.d(LOGTAG,
-						"File:" + fList[i] + " readable:"
-								+ (Boolean.valueOf(sel.canRead())).toString());
+
 				int drawableID = R.drawable.file_icon;
 				boolean canRead = sel.canRead();
 				// Set drawables
@@ -315,7 +317,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 				fileList.add(i, new Item(fList[i], drawableID, canRead));
 			}// for (int i = 0; i < fList.length; i++) {
 			if (fileList.size() == 0) {
-				// Log.d(LOGTAG, "This directory is empty");
+
 				this.directoryShownIsEmpty = true;
 				fileList.add(0, new Item("Directory is empty", -1, true));
 			} else {// sort non empty list
@@ -324,28 +326,29 @@ public class FileBrowserActivity extends ActionBarActivity {
 		} else {
 			Log.e(LOGTAG, "path does not exist or cannot be read");
 		}
-		// Log.d(TAG, "loadFileList finished");
+
 	}
 
 	private void createFileListAdapter() {
-		adapter = new ArrayAdapter<Item>(this,
+		adapter = new ArrayAdapter<Item>(
+                this,
 				android.R.layout.select_dialog_item, android.R.id.text1,
-				fileList) {
+				fileList
+        ) {
 			@Override
 			public View getView(int position, View convertView, ViewGroup parent) {
+
 				// creates view
 				View view = super.getView(position, convertView, parent);
-				TextView textView = (TextView) view
-						.findViewById(android.R.id.text1);
+				TextView textView = (TextView) view.findViewById(android.R.id.text1);
+
 				// put the image on the text view
 				int drawableID = 0;
 				if (fileList.get(position).icon != -1) {
 					// If icon == -1, then directory is empty
 					drawableID = fileList.get(position).icon;
 				}
-				textView.setCompoundDrawablesWithIntrinsicBounds(drawableID, 0,
-						0, 0);
-
+				textView.setCompoundDrawablesWithIntrinsicBounds(drawableID, 0, 0, 0);
 				textView.setEllipsize(null);
 
 				// add margin between image and text (support various screen
@@ -353,7 +356,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 				// int dp5 = (int) (5 *
 				// getResources().getDisplayMetrics().density + 0.5f);
 				int dp3 = (int) (3 * getResources().getDisplayMetrics().density + 0.5f);
-				// TODO: change next line for empty directory, so text will be
+
 				// centered
 				textView.setCompoundDrawablePadding(dp3);
 				textView.setBackgroundColor(Color.LTGRAY);
@@ -384,28 +387,20 @@ public class FileBrowserActivity extends ActionBarActivity {
 		}
 	}
 
-	public void onConfigurationChanged(Configuration newConfig) {
-		super.onConfigurationChanged(newConfig);
-		if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-			Log.d(LOGTAG, "ORIENTATION_LANDSCAPE");
-		} else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-			Log.d(LOGTAG, "ORIENTATION_PORTRAIT");
-		}
-		// Layout apparently changes itself, only have to provide good onMeasure
-		// in custom components
-		// TODO: check with keyboard
-		// if(newConfig.keyboard == Configuration.KEYBOARDHIDDEN_YES)
-	}
+//	public void onConfigurationChanged(Configuration newConfig) {
+//		super.onConfigurationChanged(newConfig);
+//
+//	}
 
 	public static long getFreeSpace(String path) {
-		StatFs stat = new StatFs(path);
-		long availSize = (long) stat.getAvailableBlocks()
-				* (long) stat.getBlockSize();
-		return availSize;
+
+        StatFs stat = new StatFs(path);
+		return (long) stat.getAvailableBlocks() * (long) stat.getBlockSize();
+
 	}
 
 	public static String formatBytes(long bytes) {
-		// TODO: add flag to which part is needed (e.g. GB, MB, KB or bytes)
+
 		String retStr = "";
 		// One binary gigabyte equals 1,073,741,824 bytes.
 		if (bytes > 1073741824) {// Add GB

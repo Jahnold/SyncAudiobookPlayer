@@ -20,7 +20,7 @@
             android:id="@+id/btn_edit_cover"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="#1ededede"
+            android:background="#64dedede"
             android:src="@drawable/ic_action_mode_edit"
             android:padding="2dp"
             android:layout_alignBottom="@+id/img_cover"

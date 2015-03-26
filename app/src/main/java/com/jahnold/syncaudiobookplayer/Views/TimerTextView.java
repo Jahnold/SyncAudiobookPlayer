@@ -12,7 +12,8 @@ import com.jahnold.syncaudiobookplayer.Util.Util;
 public class TimerTextView extends TextView {
 
 
-    private int totalTime;
+    private int mTotalTime;
+    private boolean mNegative = false;
 
     public TimerTextView(Context context) {
         super(context);
@@ -22,8 +23,21 @@ public class TimerTextView extends TextView {
         super(context, attrs);
     }
 
-    public void setTotalTime(int totalTime) { this.totalTime = totalTime;  }
-    public void setTime(int milliseconds) { this.setText(Util.millisecondsToHhMmSs(milliseconds)); }
+    public void setTotalTime(int totalTime) { mTotalTime = totalTime;  }
+
+    public void setTime(int milliseconds) {
+
+        if (mNegative) {
+            setText("- " + Util.millisecondsToHhMmSs(mTotalTime - milliseconds));
+        }
+        else {
+            setText(Util.millisecondsToHhMmSs(milliseconds));
+        }
+    }
+
+    public void toggleNegative() {
+        mNegative = !mNegative;
+    }
 
 
 }

@@ -9,6 +9,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Handler;
+import android.util.Log;
 
 /**
  * Class for reporting when the device's acceleration (excluding gravity) exceeds
@@ -155,6 +156,7 @@ public class NudgeDetector implements SensorEventListener {
                 }
             }, mGraceTime);
         }
+        Log.d("start", "detection");
     }
 
     /**

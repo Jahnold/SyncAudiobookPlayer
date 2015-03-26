@@ -6,7 +6,6 @@ import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.support.v4.app.DialogFragment;
-import android.widget.ProgressBar;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.App;
@@ -14,7 +13,6 @@ import com.jahnold.syncaudiobookplayer.Fragments.ImportBookDialogFragment;
 import com.jahnold.syncaudiobookplayer.Util.Installation;
 import com.jahnold.syncaudiobookplayer.Util.Util;
 import com.parse.FindCallback;
-import com.parse.GetCallback;
 import com.parse.ParseClassName;
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -54,7 +52,6 @@ public class Book extends ParseObject {
     public int getCurrentFilePosition() { return getInt("currentFilePosition"); }
     public ArrayList<AudioFile> getAudioFiles() { return mAudioFiles; }
     public int getCumulativePosition() { return  getInt("cumulativePosition"); }
-    public ParseObject getBookPaths() { return getParseObject("installations"); }
     //public String getSeries() { return getString("series"); }
     //public int getSeriesNumber() { return getInt("seriesNumber"); }
 
@@ -333,14 +330,6 @@ public class Book extends ParseObject {
         }
     }
 
-    public void getBookPathForCurrentDevice(Context context, GetCallback<BookPath> callback) {
-
-        ParseQuery<BookPath> query = ParseQuery.getQuery(BookPath.class);
-        query.whereEqualTo("book", Book.this);
-        query.whereEqualTo("installId", Installation.id(context));
-        query.getFirstInBackground(callback);
-
-    }
 
     /**
      *   Set up a book already in the users library on a new device

@@ -14,10 +14,9 @@ import android.os.PowerManager;
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
-import com.jahnold.syncaudiobookplayer.Models.BookPath;
 import com.jahnold.syncaudiobookplayer.R;
+import com.jahnold.syncaudiobookplayer.Util.NudgeDetector;
 import com.parse.FindCallback;
-import com.parse.GetCallback;
 import com.parse.ParseException;
 
 import java.io.File;
@@ -34,15 +33,21 @@ public class PlayerService extends Service
                 MediaPlayer.OnCompletionListener {
 
     private static final int NOTIFICATION_ID = 7;
+    private static final int PAUSE_TIMER = 0;
+    private static final int PAUSE_END_OF_FILE = 1;
+
+    private final IBinder mBinder = new PlayerBinder();
 
     private MediaPlayer mMediaPlayer;
     private ArrayList<AudioFile> mAudioFiles;           // array of playlist of audio files
     private Book mBook;                                 // the book that's being played
-    private final IBinder mBinder = new PlayerBinder();
     private boolean mPrepared = false;                  // tracks whether the media player is prepared
     private boolean mPauseAtEndOfFile = false;          // track whether the user has asked to pause at the end of the current file
     private boolean mSettingNewBook = false;            // changes behaviour for when a new book is being set up
-    private int mCountdownRemaining = -1;
+    private boolean mContinueOnNudge = false;           // whether to continue playing if the device is nudged
+    private int mCountdownRemaining = -1;               // time in milliseconds until pause, -1 if no countdown
+    private int mNudgeTimeRemaining = -1;               // time in milliseconds until the nudge detector is disabled
+    private int mCountdownLength;                       // length in milliseconds of the countdown
     private CountDownTimer mCountDownTimer;
 
 
@@ -54,6 +59,7 @@ public class PlayerService extends Service
         // cancel any countdown timers
         cancelCountdownTimer();
     }
+    public void setContinueOnNudge(boolean continueOnNudge) { mContinueOnNudge = continueOnNudge; }
 
 
     // getters
@@ -162,11 +168,7 @@ public class PlayerService extends Service
 
         mMediaPlayer.stop();
 
-        // if the pause at end of file flag is on stop now
-        if (mPauseAtEndOfFile) {
-            mPauseAtEndOfFile = false;
-            return;
-        }
+
 
         // if we've just set a new book then stop now
         if (mSettingNewBook) {
@@ -188,6 +190,7 @@ public class PlayerService extends Service
 
             mBook.saveInBackground();
 
+
             prepare();
 
         }
@@ -205,6 +208,13 @@ public class PlayerService extends Service
 
         mp.seekTo(mBook.getCurrentFilePosition());
         mPrepared = true;
+
+        // if the pause at end of file flag is on stop now
+        if (mPauseAtEndOfFile) {
+            mPauseAtEndOfFile = false;
+            startNudgeDetector(PAUSE_END_OF_FILE);
+            return;
+        }
 
         // check whether to being playback
         if (!mSettingNewBook) mp.start();
@@ -268,6 +278,8 @@ public class PlayerService extends Service
         // boolean stops playback from starting straight away
         // also stops the media player from updating the current position until book is prepared
         mSettingNewBook = true;
+        mPauseAtEndOfFile = false;
+        mContinueOnNudge = false;
 
         // grab the book
         mBook = book;
@@ -318,6 +330,7 @@ public class PlayerService extends Service
         mPauseAtEndOfFile = false;
 
         // create a new countdown timer
+        mCountdownLength = milliseconds;
         mCountDownTimer = new CountDownTimer(milliseconds, 400) {
 
             @Override
@@ -327,8 +340,13 @@ public class PlayerService extends Service
 
             @Override
             public void onFinish() {
+
+                // pause playback
                 pause();
                 mCountdownRemaining = -1;
+
+                // if continue on nudge is set start listening for nudge now
+                if (mContinueOnNudge) startNudgeDetector(PAUSE_TIMER);
 
             }
         }.start();
@@ -338,6 +356,67 @@ public class PlayerService extends Service
         if (mCountDownTimer != null) {
             mCountDownTimer.cancel();
         }
+
+    }
+
+    public void startNudgeDetector(final int pauseType) {
+
+        final NudgeDetector nudgeDetector = new NudgeDetector(getApplicationContext());
+
+        final CountDownTimer countDownTimer =  new CountDownTimer(60000, 400) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                nudgeDetector.setEnabled(false);
+            }
+        };
+
+        nudgeDetector.registerListener(new NudgeDetector.NudgeDetectorEventListener() {
+            @Override
+            public void onNudgeDetected() {
+
+                nudgeDetector.setEnabled(false);
+                nudgeDetector.stopDetection();
+                countDownTimer.cancel();
+                mNudgeTimeRemaining = -1;
+
+                switch (pauseType) {
+                    case PAUSE_END_OF_FILE:
+
+                        mPauseAtEndOfFile = true;
+                        break;
+
+                    case PAUSE_TIMER:
+
+                        setCountdownTimer(mCountdownLength);
+                        break;
+                }
+
+                // restart playback
+                mMediaPlayer.start();
+            }
+        });
+
+        new CountDownTimer(60000, 400) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                mNudgeTimeRemaining = (int) millisUntilFinished;
+            }
+
+            @Override
+            public void onFinish() {
+                nudgeDetector.setEnabled(false);
+                nudgeDetector.stopDetection();
+            }
+        }.start();
+
+        nudgeDetector.setEnabled(true);
+        nudgeDetector.startDetection();
+
 
     }
 
