@@ -3,6 +3,7 @@ package com.jahnold.syncaudiobookplayer.Adapters;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,6 +14,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
@@ -48,7 +50,7 @@ public class BookAdapter extends ArrayAdapter<Book> {
         if (convertView == null) {
 
             // inflate the view
-            convertView = LayoutInflater.from(getContext()).inflate(R.layout.adapter_book, parent);
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.adapter_book, null);
 
         }
 
@@ -61,6 +63,7 @@ public class BookAdapter extends ArrayAdapter<Book> {
         final ImageView imgCover = (ImageView) convertView.findViewById(R.id.img_cover);
         ImageButton btnMenu = (ImageButton) convertView.findViewById(R.id.btn_menu);
         ProgressBar progressBar = (ProgressBar) convertView.findViewById(R.id.progress_bar);
+        ImageView imgImport = (ImageView) convertView.findViewById(R.id.img_import);
 
         if (item != null) {
 
@@ -91,6 +94,12 @@ public class BookAdapter extends ArrayAdapter<Book> {
             // set the progress bar
             progressBar.setMax(item.getLength());
             progressBar.setProgress(item.getCumulativePosition() + item.getCurrentFilePosition());
+
+            // if the book isn't on this device change the text color to indicate
+            int colourNormal = convertView.getResources().getColor(android.support.v7.appcompat.R.color.secondary_text_default_material_light);
+            int colourMissing = convertView.getResources().getColor(android.support.v7.appcompat.R.color.secondary_text_disabled_material_light);
+            txtTitle.setTextColor((item.onDevice()) ? colourNormal : colourMissing);
+            txtAuthor.setTextColor((item.onDevice()) ? colourNormal : colourMissing);
 
         }
 

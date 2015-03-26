@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content">
+  android:id="@+id/list_book_item"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/img_cover"
@@ -42,6 +43,16 @@
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         android:layout_marginRight="10dp"/>
+
+    <ImageView
+        android:id="@+id/img_import"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:src="@drawable/ic_action_input"
+        android:layout_toLeftOf="@id/btn_menu"
+        android:visibility="gone"
+        />
 
     <ProgressBar
         android:id="@+id/progress_bar"

@@ -11,6 +11,7 @@ import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.Models.BookPath;
 import com.jahnold.syncaudiobookplayer.Services.PlayerService;
+import com.jahnold.syncaudiobookplayer.Util.Installation;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.parse.Parse;
@@ -24,10 +25,15 @@ public class App extends Application {
     private static PlayerService sPlayerService;
     private boolean mPlayerBound = false;
     private Intent mPlayerIntent;
+    private static String sInstallationId;
 
     public static PlayerService getPlayerService() {
 
         return sPlayerService;
+    }
+
+    public static String getInstallId() {
+        return sInstallationId;
     }
 
     @Override
@@ -52,6 +58,8 @@ public class App extends Application {
             bindService(mPlayerIntent, playerConnection, Context.BIND_AUTO_CREATE);
 
         }
+
+        sInstallationId = Installation.id(this);
     }
 
     // connect to the player service
