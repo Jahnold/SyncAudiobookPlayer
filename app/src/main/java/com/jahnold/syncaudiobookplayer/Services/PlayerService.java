@@ -4,12 +4,15 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.widget.RemoteViews;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Models.AudioFile;
@@ -17,7 +20,9 @@ import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
 import com.jahnold.syncaudiobookplayer.Util.NudgeDetector;
 import com.parse.FindCallback;
+import com.parse.GetDataCallback;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +54,7 @@ public class PlayerService extends Service
     private int mNudgeTimeRemaining = -1;               // time in milliseconds until the nudge detector is disabled
     private int mCountdownLength;                       // length in milliseconds of the countdown
     private CountDownTimer mCountDownTimer;
+    private NudgeDetector mNudgeDetector;
 
 
     //private final String TAG = "Playback Service";
@@ -63,7 +69,13 @@ public class PlayerService extends Service
 
 
     // getters
-    public boolean isPlaying() { return mMediaPlayer.isPlaying(); }
+    public boolean isPlaying() {
+
+        // hopefully this should short circuit so that if the media player
+        // is not prepared we won't get an exception (and we also know it's not playing)
+        return mPrepared && mMediaPlayer.isPlaying();
+
+    }
     public Book getBook() { return mBook; }
 
     /**
@@ -89,7 +101,7 @@ public class PlayerService extends Service
 
     /**
      *  Returns the current position (of the whole book) in milliseconds
-     *  If the media player is current not prepared it returns -1
+     *  If the media player is current not prepared it gets the last known position from the book
      */
     public int getCurrentPosition() {
 
@@ -115,6 +127,10 @@ public class PlayerService extends Service
         mMediaPlayer.setOnCompletionListener(this);
         mMediaPlayer.setOnErrorListener(this);
 
+        // init the nudge detector
+        mNudgeDetector = new NudgeDetector(getApplicationContext());
+        mNudgeDetector.setEnabled(true);
+
     }
 
     @Override
@@ -139,25 +155,6 @@ public class PlayerService extends Service
 
     @Override
     public boolean onUnbind(Intent intent) {
-
-        // if service is unbound then show bring it to the foreground and show a notification
-        Intent notificationIntent = new Intent(this, MainActivity.class);
-        notificationIntent.setAction(MainActivity.INTENT_PLAYBACK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                this,
-                151,
-                notificationIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT
-        );
-
-        Notification.Builder builder = new Notification.Builder(this);
-        builder.setContentIntent(pendingIntent)
-                .setSmallIcon(R.drawable.ic_action_book)
-                .setOngoing(true)
-                .setContentTitle("hello");
-
-        Notification notification = builder.build();
-        startForeground(NOTIFICATION_ID, notification);
 
 
         return false;
@@ -248,6 +245,10 @@ public class PlayerService extends Service
         }
     }
 
+    /**
+     *  Seek to a position (milliseconds) within the *book*
+     *  Calculates which AudioFile this position will be in
+     */
     public void seekTo(int position) {
 
         int cumulative = 0;
@@ -273,6 +274,10 @@ public class PlayerService extends Service
 
     }
 
+    /**
+     *  Starts the process of loading a new book into the service
+     *  Loads all AudioFiles and then calls the prepare method
+     */
     public void setBook(final Book book) {
 
         // boolean stops playback from starting straight away
@@ -291,18 +296,23 @@ public class PlayerService extends Service
                     @Override
                     public void done(List<AudioFile> audioFiles, ParseException e) {
                         if (e == null) {
-                            mAudioFiles = (ArrayList<AudioFile>) audioFiles ;
+                            mAudioFiles = (ArrayList<AudioFile>) audioFiles;
 
                             // prepare for playback
                             prepare();
+                        } else {
+                            e.printStackTrace();
                         }
-                        else { e.printStackTrace(); }
                     }
                 }
         );
 
     }
 
+    /**
+     *  For the currently loaded book prepares the current AudioFile for playback
+     *
+     */
     private void prepare() {
 
         mPrepared = false;
@@ -323,7 +333,10 @@ public class PlayerService extends Service
     }
 
 
-
+    /**
+     *  Starts a count down timer for a timed pause.
+     *  The onTick method updates the countdown variable so that the PlaybackFragment can access it
+     */
     public void setCountdownTimer(int milliseconds) {
 
         // cancel any EOF pauses
@@ -352,6 +365,9 @@ public class PlayerService extends Service
         }.start();
     }
 
+    /**
+     *  Cancels any active count down to pause
+     */
     public void cancelCountdownTimer() {
         if (mCountDownTimer != null) {
             mCountDownTimer.cancel();
@@ -359,31 +375,38 @@ public class PlayerService extends Service
 
     }
 
+    /**
+     *  Uses the NudgeDetector to listen for a nudge of the device for 1 minute
+     *  If a nudge is detected it resumes playback and reactivates the same special pause
+     */
     public void startNudgeDetector(final int pauseType) {
 
-        final NudgeDetector nudgeDetector = new NudgeDetector(getApplicationContext());
-
+        // create a countdown timer for 1 minute
         final CountDownTimer countDownTimer =  new CountDownTimer(60000, 400) {
             @Override
             public void onTick(long millisUntilFinished) {
-
+                mNudgeTimeRemaining = (int) millisUntilFinished;
             }
 
             @Override
             public void onFinish() {
-                nudgeDetector.setEnabled(false);
+                mNudgeDetector.stopDetection();
             }
         };
 
-        nudgeDetector.registerListener(new NudgeDetector.NudgeDetectorEventListener() {
+        // register the listener for the countdown timer
+        mNudgeDetector.registerListener(new NudgeDetector.NudgeDetectorEventListener() {
             @Override
             public void onNudgeDetected() {
 
-                nudgeDetector.setEnabled(false);
-                nudgeDetector.stopDetection();
+                // stop nudge detection and the 1 minute countdown
+                mNudgeDetector.stopDetection();
                 countDownTimer.cancel();
                 mNudgeTimeRemaining = -1;
 
+                // reset the pause
+                // if it was an EOF pause reactive the boolean
+                // if it was a timer pause start a new countdown
                 switch (pauseType) {
                     case PAUSE_END_OF_FILE:
 
@@ -401,23 +424,89 @@ public class PlayerService extends Service
             }
         });
 
-        new CountDownTimer(60000, 400) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                mNudgeTimeRemaining = (int) millisUntilFinished;
-            }
+        // start nudge detection and the 1 minute countdown
+        mNudgeDetector.startDetection();
+        countDownTimer.start();
 
-            @Override
-            public void onFinish() {
-                nudgeDetector.setEnabled(false);
-                nudgeDetector.stopDetection();
-            }
-        }.start();
+    }
 
-        nudgeDetector.setEnabled(true);
-        nudgeDetector.startDetection();
+    public void createNotification() {
+
+        // create a pending intent which brings the user to the playback fragment
+        Intent playbackIntent = new Intent(this, MainActivity.class);
+        playbackIntent.setAction(MainActivity.INTENT_PLAYBACK);
+        PendingIntent playbackPendingIntent = PendingIntent.getActivity(
+                this,
+                151,
+                playbackIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        // create a play/pause intent
+        Intent playPauseIntent = new Intent(this, PlayerService.class);
+        playPauseIntent.setAction(MainActivity.INTENT_PLAY_PAUSE);
+        PendingIntent playPausePendingIntent = PendingIntent.getService(
+                this,
+                152,
+                playPauseIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        // create an exit pending intent - this will quit the app
+        Intent exitIntent = new Intent(this, PlayerService.class);
+        playPauseIntent.setAction(MainActivity.INTENT_EXIT);
+        PendingIntent exitPendingIntent = PendingIntent.getService(
+                this,
+                153,
+                exitIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        // create the remote view for the notification
+        final RemoteViews notificationView = new RemoteViews(getPackageName(), R.layout.notification);
+        notificationView.setTextViewText(R.id.txt_title, mBook.getTitle());
+        notificationView.setTextViewText(R.id.txt_author, mBook.getAuthor());
+        notificationView.setOnClickPendingIntent(R.id.btn_play_pause, playPausePendingIntent);
+        notificationView.setOnClickPendingIntent(R.id.btn_exit, exitPendingIntent);
+        // set the play/pause button image depending on whether the media player is playing or not
+        notificationView.setImageViewResource(R.id.btn_play_pause, (isPlaying()) ? R.drawable.ic_action_pause_white : R.drawable.ic_action_play_arrow_white);
+
+        // set the cover picture
+        if (mBook.getCover() == null) {
+            notificationView.setImageViewResource(R.id.img_cover, R.drawable.book);
+        }
+        else {
+            ParseFile cover = mBook.getCover();
+            cover.getDataInBackground(new GetDataCallback() {
+                @Override
+                public void done(byte[] bytes, ParseException e) {
+
+                    if (e == null) {
+
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        notificationView.setImageViewBitmap(R.id.img_cover, bitmap);
+
+                    } else { e.printStackTrace(); }
+                }
+            });
+        }
+
+        // build the notification
+        Notification.Builder builder = new Notification.Builder(this);
+        builder.setContentIntent(playbackPendingIntent)
+                .setSmallIcon(R.drawable.ic_action_book)
+                .setContent(notificationView)
+                .setContentIntent(playbackPendingIntent);
 
 
+        Notification notification = builder.build();
+        startForeground(NOTIFICATION_ID, notification);
+
+    }
+
+    public void clearNotification() {
+
+        stopForeground(true);
     }
 
     public class PlayerBinder extends Binder {

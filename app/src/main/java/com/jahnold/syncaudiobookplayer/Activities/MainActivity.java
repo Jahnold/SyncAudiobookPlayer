@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.support.v4.widget.DrawerLayout;
 
+import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.NavigationDrawerFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.PlaybackFragment;
@@ -28,6 +29,8 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
     public static String INTENT_PLAYBACK = "com.jahnold.syncaudiobookplayer.playback";
     public static String INTENT_BOOKLIST = "com.jahnold.syncaudiobookplayer.booklist";
+    public static String INTENT_PLAY_PAUSE = "com.jahnold.syncaudiobookplayer.playpause";
+    public static String INTENT_EXIT = "com.jahnold.syncaudiobookplayer.exit";
 
     private NavigationDrawerFragment mNavigationDrawerFragment;     // nav draw fragment
     private CharSequence mTitle;                                    // last screen title
@@ -61,6 +64,15 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
                 (DrawerLayout) findViewById(R.id.drawer_layout)
         );
 
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (!isChangingConfigurations()) {
+            App.getPlayerService().clearNotification();
+        }
     }
 
     @Override
@@ -168,6 +180,15 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
     }
 
+    @Override
+    protected void onStop() {
 
+        super.onStop();
 
+        // only show the notification if the activity is actually being moved to the back
+        if (!isChangingConfigurations()) {
+            // show the notification
+            App.getPlayerService().createNotification();
+        }
+    }
 }
