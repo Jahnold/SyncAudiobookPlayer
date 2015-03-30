@@ -135,7 +135,24 @@ public class PlayerService extends Service
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if (MainActivity.INTENT_PLAY_PAUSE.equals(intent.getAction())) {
+
+            togglePlayback();
+            createNotification();
+
+        }
+
+        if (MainActivity.INTENT_EXIT.equals(intent.getAction())) {
+
+            pause();
+            clearNotification();
+            stopSelf();
+
+        }
+
         return super.onStartCommand(intent, flags, startId);
+
     }
 
     @Override
@@ -147,15 +164,11 @@ public class PlayerService extends Service
     @Override
     public IBinder onBind(Intent intent) {
 
-        // clear any notification
-        stopForeground(true);
-
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
-
 
         return false;
     }
@@ -454,7 +467,7 @@ public class PlayerService extends Service
 
         // create an exit pending intent - this will quit the app
         Intent exitIntent = new Intent(this, PlayerService.class);
-        playPauseIntent.setAction(MainActivity.INTENT_EXIT);
+        exitIntent.setAction(MainActivity.INTENT_EXIT);
         PendingIntent exitPendingIntent = PendingIntent.getService(
                 this,
                 153,
@@ -470,12 +483,17 @@ public class PlayerService extends Service
         notificationView.setOnClickPendingIntent(R.id.btn_exit, exitPendingIntent);
         // set the play/pause button image depending on whether the media player is playing or not
         notificationView.setImageViewResource(R.id.btn_play_pause, (isPlaying()) ? R.drawable.ic_action_pause_white : R.drawable.ic_action_play_arrow_white);
+        notificationView.setImageViewResource(R.id.img_cover, R.drawable.book);
+
+        // build the notification
+        final Notification.Builder builder = new Notification.Builder(this);
+        builder.setContentIntent(playbackPendingIntent)
+                .setSmallIcon(R.drawable.ic_action_book)
+                .setContentIntent(playbackPendingIntent);
 
         // set the cover picture
-        if (mBook.getCover() == null) {
-            notificationView.setImageViewResource(R.id.img_cover, R.drawable.book);
-        }
-        else {
+        if (mBook.getCover() != null) {
+
             ParseFile cover = mBook.getCover();
             cover.getDataInBackground(new GetDataCallback() {
                 @Override
@@ -485,22 +503,22 @@ public class PlayerService extends Service
 
                         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                         notificationView.setImageViewBitmap(R.id.img_cover, bitmap);
+                        builder.setContent(notificationView);
+                        Notification notification = builder.build();
+                        startForeground(NOTIFICATION_ID, notification);
 
                     } else { e.printStackTrace(); }
                 }
             });
         }
-
-        // build the notification
-        Notification.Builder builder = new Notification.Builder(this);
-        builder.setContentIntent(playbackPendingIntent)
-                .setSmallIcon(R.drawable.ic_action_book)
-                .setContent(notificationView)
-                .setContentIntent(playbackPendingIntent);
+        else {
+            builder.setContent(notificationView);
+            Notification notification = builder.build();
+            startForeground(NOTIFICATION_ID, notification);
+        }
 
 
-        Notification notification = builder.build();
-        startForeground(NOTIFICATION_ID, notification);
+
 
     }
 

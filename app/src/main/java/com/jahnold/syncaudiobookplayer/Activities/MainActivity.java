@@ -15,20 +15,12 @@ import com.jahnold.syncaudiobookplayer.Fragments.NavigationDrawerFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.PlaybackFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
-import com.parse.FindCallback;
-import com.parse.ParseException;
-import com.parse.ParseObject;
-import com.parse.ParseQuery;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class MainActivity extends ActionBarActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
 
     public static String INTENT_PLAYBACK = "com.jahnold.syncaudiobookplayer.playback";
-    public static String INTENT_BOOKLIST = "com.jahnold.syncaudiobookplayer.booklist";
     public static String INTENT_PLAY_PAUSE = "com.jahnold.syncaudiobookplayer.playpause";
     public static String INTENT_EXIT = "com.jahnold.syncaudiobookplayer.exit";
 

@@ -8,19 +8,23 @@
         android:id="@+id/img_cover"
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:layout_marginRight="5dp"/>
+        android:layout_marginRight="5dp"
+        android:background="#ffffffff"
+        />
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@id/img_cover"
-        android:layout_centerVertical="true">
+        android:layout_centerVertical="true"
+        android:layout_marginRight="75dp">
 
         <TextView
             android:id="@+id/txt_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+
             android:text="Harry Potter and the Philosophers Stone"
             />
 

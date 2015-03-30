@@ -75,7 +75,9 @@ public class App extends Application {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+
             mPlayerBound = false;
+
         }
 
     };
