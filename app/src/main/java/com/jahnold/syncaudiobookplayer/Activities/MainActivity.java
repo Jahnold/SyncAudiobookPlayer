@@ -15,6 +15,7 @@ import com.jahnold.syncaudiobookplayer.Fragments.NavigationDrawerFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.PlaybackFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
+import com.parse.ParseUser;
 
 
 public class MainActivity extends ActionBarActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks {
@@ -26,9 +27,11 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
     private NavigationDrawerFragment mNavigationDrawerFragment;     // nav draw fragment
     private CharSequence mTitle;                                    // last screen title
+    private boolean mSuppressNotification = false;
 
     // getters & setters
     public NavigationDrawerFragment getNavigationDrawerFragment() { return mNavigationDrawerFragment; }
+    public void setSuppressNotification(boolean suppressNotification) { mSuppressNotification = suppressNotification; }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +65,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
     protected void onStart() {
         super.onStart();
 
+        mSuppressNotification = false;
         if (!isChangingConfigurations()) {
             App.getPlayerService().clearNotification();
         }
@@ -70,48 +74,62 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-        // catch the number 2 because this is an activity rather than a fragment
-        if (position == 2) {
+        // update the main content by replacing fragments
+        FragmentManager fragmentManager = getSupportFragmentManager();
 
-            Intent fileExploreIntent = new Intent(
-                    FileBrowserActivity.INTENT_ACTION_SELECT_DIR,
-                    null,
-                    getApplicationContext(),
-                    FileBrowserActivity.class
-            );
+        switch (position) {
+            case 0:
 
-            // don't show hidden dirs
-            fileExploreIntent.putExtra(FileBrowserActivity.showCannotReadParameter, false);
+                // load the book list fragment
+                fragmentManager
+                        .beginTransaction()
+                        .replace(R.id.container, new BookListFragment(), "BookListFragment")
+                        .commit();
+                break;
 
-            // start the activity
-            startActivityForResult(fileExploreIntent, 454);
+            case 2:
 
+                // load the file browser activity
+                Intent fileExploreIntent = new Intent(
+                        FileBrowserActivity.INTENT_ACTION_SELECT_DIR,
+                        null,
+                        getApplicationContext(),
+                        FileBrowserActivity.class
+                );
+
+                // don't show the notification
+                mSuppressNotification = true;
+
+                // don't show hidden dirs
+                fileExploreIntent.putExtra(FileBrowserActivity.showCannotReadParameter, false);
+
+                // start the activity
+                startActivityForResult(fileExploreIntent, 454);
+                break;
+
+            case 3:
+
+                // load the play back fragment
+                PlaybackFragment playbackFragment = (PlaybackFragment) getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
+                if (playbackFragment == null) {
+                    playbackFragment = new PlaybackFragment();
+                }
+                fragmentManager
+                        .beginTransaction()
+                        .replace(R.id.container, playbackFragment, "PlaybackFragment")
+                        .commit();
+                break;
+
+            case 5:
+
+                // log out, load auth activity
+                ParseUser.logOut();
+                Intent intent = new Intent(this, AuthActivity.class);
+                mSuppressNotification = true;
+                startActivity(intent);
+                finish();
         }
-        else {
 
-            // update the main content by replacing fragments
-            FragmentManager fragmentManager = getSupportFragmentManager();
-
-            switch (position) {
-                case 0:
-                    fragmentManager
-                            .beginTransaction()
-                            .replace(R.id.container, new BookListFragment(), "BookListFragment")
-                            .commit();
-                    break;
-
-                case 3:
-                    PlaybackFragment playbackFragment = (PlaybackFragment) getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
-                    if (playbackFragment == null) {
-                        playbackFragment = new PlaybackFragment();
-                    }
-                    fragmentManager
-                            .beginTransaction()
-                            .replace(R.id.container, playbackFragment, "PlaybackFragment")
-                            .commit();
-                    break;
-            }
-        }
 
 
     }
@@ -160,6 +178,8 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         // return from the file browser
         if (requestCode == 454 && resultCode == MainActivity.RESULT_OK && data != null) {
 
+            mSuppressNotification = false;
+
             // create a progress dialog
             ProgressDialog progressDialog = new ProgressDialog(this);
             progressDialog.setTitle(getString(R.string.title_progress_dialog));
@@ -178,7 +198,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         super.onStop();
 
         // only show the notification if the activity is actually being moved to the back
-        if (!isChangingConfigurations()) {
+        if (!isChangingConfigurations() && !mSuppressNotification) {
             // show the notification
             App.getPlayerService().createNotification();
         }

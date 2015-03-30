@@ -81,6 +81,9 @@ public class BookListFragment extends Fragment {
                                         FileBrowserActivity.class
                                 );
 
+                                // don't show the notification
+                                ((MainActivity) getActivity()).setSuppressNotification(true);
+
                                 // don't show hidden dirs
                                 fileExploreIntent.putExtra(FileBrowserActivity.showCannotReadParameter, false);
                                 fileExploreIntent.putExtra("book_id", book.getObjectId());
@@ -157,6 +160,8 @@ public class BookListFragment extends Fragment {
 
         // return from the file browser
         if (requestCode == 987 && resultCode == MainActivity.RESULT_OK && data != null) {
+
+
 
             // create a progress dialog
             final ProgressDialog progressDialog = new ProgressDialog(getActivity());
