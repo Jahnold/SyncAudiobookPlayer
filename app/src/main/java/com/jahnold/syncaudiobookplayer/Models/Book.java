@@ -2,16 +2,22 @@ package com.jahnold.syncaudiobookplayer.Models;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.support.v4.app.DialogFragment;
+import android.view.View;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.App;
+import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.ImportBookDialogFragment;
 import com.jahnold.syncaudiobookplayer.Util.Installation;
 import com.jahnold.syncaudiobookplayer.Util.Util;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.ImageSize;
+import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 import com.parse.FindCallback;
 import com.parse.ParseClassName;
 import com.parse.ParseException;
@@ -21,6 +27,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,6 +97,7 @@ public class Book extends ParseObject {
             private ArrayList<AudioFile> mAudioFiles;
             private int mTrackNumber = 0;
             private boolean mMetaDataMediaExtracted = false;
+            private Bitmap mCover;
 
             @Override
             protected Book doInBackground(Void... nothing) {
@@ -131,6 +139,26 @@ public class Book extends ParseObject {
                     @Override
                     public void onImportBookConfirm(DialogFragment dialog, final String title, final String author) {
 
+                        // if there is an image create a ParseFile for it
+                        if (mCover != null) {
+                            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                            mCover.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                            final ParseFile cover = new ParseFile(book.getObjectId() + ".png", stream.toByteArray());
+                            cover.saveInBackground(new SaveCallback() {
+                                @Override
+                                public void done(ParseException e) {
+
+                                    if (e == null) {
+
+                                        // associate picture with the book
+                                        book.setCover(cover);
+
+                                    }
+                                    else { e.printStackTrace(); }
+                                }
+                            });
+                        }
+
                         // create a book path object for this book/installation
                         final BookPath bookPath = new BookPath();
                         bookPath.setBook(book);
@@ -158,7 +186,11 @@ public class Book extends ParseObject {
                                             audioFile.saveInBackground();
                                         }
 
-
+                                        // add the book to the book list fragment
+                                        BookListFragment bookListFragment = (BookListFragment) ((MainActivity) context).getSupportFragmentManager().findFragmentByTag("BookListFragment");
+                                        if (bookListFragment != null) {
+                                            bookListFragment.addBook(book);
+                                        }
                                     }
                                 });
 
@@ -207,6 +239,22 @@ public class Book extends ParseObject {
                         AudioFile audioFile = createAudioFile(file);
                         mBook.incrementLength(audioFile.getLength());
                         mAudioFiles.add(audioFile);
+
+                    }
+
+                    // is this an image file
+                    if (Util.isFileType(file.getName(), Util.FILETYPE_IMAGE)) {
+                        ImageSize imageSize = new ImageSize(400, 400);
+                        ImageLoader.getInstance().loadImage(
+                                "file://" + file.getAbsolutePath(),
+                                imageSize,
+                                new SimpleImageLoadingListener() {
+                                    @Override
+                                    public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+                                        mCover = loadedImage;
+                                    }
+                                }
+                        );
 
                     }
 
@@ -335,7 +383,7 @@ public class Book extends ParseObject {
      *   Set up a book already in the users library on a new device
      *   Checks to make sure all files are there and then makes a new BookPath object
      */
-    public void importFromLocal(final String directory, final ProgressDialog dialog) {
+    public void importFromLocal(final Context context, final String directory, final ProgressDialog dialog, final int position) {
 
         new AsyncTask<Void,String,Void>() {
 
@@ -405,6 +453,11 @@ public class Book extends ParseObject {
                             setBookPaths(newBookPaths);
                             saveInBackground();
 
+                            // update the book list fragment
+                            BookListFragment bookListFragment = (BookListFragment) ((MainActivity) context).getSupportFragmentManager().findFragmentByTag("BookListFragment");
+                            if (bookListFragment != null  && position != -1) {
+                                bookListFragment.updateBook(Book.this, position);
+                            }
                         }
                     });
                 }
@@ -413,4 +466,32 @@ public class Book extends ParseObject {
         }.execute();
     }
 
+    public void deleteFromLibrary() {
+
+        // delete all the AudioFiles
+        AudioFile.loadForBook(this, new FindCallback<AudioFile>() {
+            @Override
+            public void done(List<AudioFile> audioFiles, ParseException e) {
+                for (AudioFile audioFile : audioFiles) {
+                    audioFile.deleteInBackground();
+                }
+            }
+        });
+
+        // find and delete all the BookPaths
+        ParseQuery<BookPath> query = ParseQuery.getQuery("BookPath");
+        query.whereEqualTo("book", this);
+        query.findInBackground(new FindCallback<BookPath>() {
+            @Override
+            public void done(List<BookPath> bookPaths, ParseException e) {
+                for (BookPath bookPath : bookPaths) {
+                    bookPath.deleteInBackground();
+                }
+            }
+        });
+
+        // delete myself
+        deleteInBackground();
+
+    }
 }

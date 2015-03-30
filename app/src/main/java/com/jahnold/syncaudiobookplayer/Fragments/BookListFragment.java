@@ -59,7 +59,7 @@ public class BookListFragment extends Fragment {
         // set up the click listener for the list items (books)
         bookList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
 
                 // get the clicked book
                 final Book book = mAdapter.getItem(position);
@@ -87,6 +87,7 @@ public class BookListFragment extends Fragment {
                                 // don't show hidden dirs
                                 fileExploreIntent.putExtra(FileBrowserActivity.showCannotReadParameter, false);
                                 fileExploreIntent.putExtra("book_id", book.getObjectId());
+                                fileExploreIntent.putExtra("position", position);
 
                                 // start the activity
                                 startActivityForResult(fileExploreIntent, 987);
@@ -154,7 +155,7 @@ public class BookListFragment extends Fragment {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, final Intent data) {
 
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -176,10 +177,21 @@ public class BookListFragment extends Fragment {
             query.getInBackground(data.getStringExtra("book_id"), new GetCallback<Book>() {
                 @Override
                 public void done(Book book, ParseException e) {
-                    book.importFromLocal(directory, progressDialog);
+                    book.importFromLocal(getActivity(), directory, progressDialog, data.getIntExtra("position", -1));
                 }
             });
 
+
         }
+    }
+
+    public void addBook(Book book) {
+        mAdapter.add(book);
+    }
+
+    public void updateBook(Book book, int position) {
+
+        mBooks.set(position,book);
+        mAdapter.notifyDataSetChanged();
     }
 }

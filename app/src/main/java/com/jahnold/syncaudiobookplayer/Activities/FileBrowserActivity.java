@@ -81,6 +81,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 	private static final int SELECT_FILE = 2;
 
     private String mBookId;
+    private int mPosition;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -106,6 +107,7 @@ public class FileBrowserActivity extends ActionBarActivity {
 
         // if a book id has been passed in grab it
         mBookId = thisInt.getStringExtra("book_id");
+        mPosition = thisInt.getIntExtra("position", -1);
 
 		setInitialDirectory();
 
@@ -253,6 +255,9 @@ public class FileBrowserActivity extends ActionBarActivity {
         // pass the book id back if we've got it
         if (mBookId != null) {
             retIntent.putExtra("book_id", mBookId);
+        }
+        if (mPosition != -1) {
+            retIntent.putExtra("position", mPosition);
         }
 
 		this.setResult(RESULT_OK, retIntent);

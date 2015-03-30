@@ -133,6 +133,8 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
 
         // if this is the result of choosing an image the run the onCoverChosen method
         if (requestCode == 555 && resultCode == MainActivity.RESULT_OK && data != null) {
+
+            ((MainActivity) getActivity()).setSuppressNotification(false);
             onCoverChosen(data);
         }
     }
@@ -148,6 +150,11 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
                 Intent.ACTION_PICK,
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         );
+
+        // don't show the notification
+        ((MainActivity) getActivity()).setSuppressNotification(true);
+
+        // run intent
         startActivityForResult(intent, 555);
     }
 
