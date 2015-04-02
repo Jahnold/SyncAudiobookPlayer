@@ -63,7 +63,6 @@ public class BookAdapter extends ArrayAdapter<Book> {
         final ImageView imgCover = (ImageView) convertView.findViewById(R.id.img_cover);
         ImageButton btnMenu = (ImageButton) convertView.findViewById(R.id.btn_menu);
         ProgressBar progressBar = (ProgressBar) convertView.findViewById(R.id.progress_bar);
-        ImageView imgImport = (ImageView) convertView.findViewById(R.id.img_import);
 
         if (item != null) {
 
