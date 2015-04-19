@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,6 +42,8 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
     private ArrayList<AudioFile> mAudioFiles = new ArrayList<>();
     private FileAdapter mAdapter;
     private ImageView mCover;
+    private TextView mTxtTitle;
+    private TextView mTxtAuthor;
 
     // empty constructor
     public BookDetailsFragment() {}
@@ -55,20 +58,20 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
 
         // get refs
         mCover = (ImageView) v.findViewById(R.id.img_cover);
-        TextView txtTitle = (TextView) v.findViewById(R.id.txt_title);
-        TextView txtAuthor = (TextView) v.findViewById(R.id.txt_author);
+        mTxtTitle = (TextView) v.findViewById(R.id.txt_title);
+        mTxtAuthor = (TextView) v.findViewById(R.id.txt_author);
         ListView listFiles = (ListView) v.findViewById(R.id.list_files);
 
         // set the onclick listeners
-        txtAuthor.setOnClickListener(this);
-        txtTitle.setOnClickListener(this);
+        mTxtAuthor.setOnClickListener(this);
+        mTxtTitle.setOnClickListener(this);
         mCover.setOnClickListener(this);
 
         // fill in some details from the book
         if (mBook != null) {
 
-            txtTitle.setText(mBook.getTitle());
-            txtAuthor.setText(mBook.getAuthor());
+            mTxtTitle.setText(mBook.getTitle());
+            mTxtAuthor.setText(mBook.getAuthor());
 
             if (mBook.getCover() == null) {
                 mCover.setImageResource(R.drawable.book);
@@ -141,6 +144,50 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
 
     private void editDetails(int detail) {
 
+        EditDetailsDialogFragment editDetailsDialogFragment = new EditDetailsDialogFragment();
+
+
+        switch (detail) {
+            case R.id.txt_title:
+
+                editDetailsDialogFragment.setDetailName("Title");
+                editDetailsDialogFragment.setCurrentDetail(mBook.getTitle());
+                editDetailsDialogFragment.setListener(new EditDetailsDialogFragment.EditDetailsListener() {
+                    @Override
+                    public void onEditDetailsConfirm(DialogFragment dialog, String detail) {
+
+                        // update the book
+                        mBook.setTitle(detail);
+                        mBook.saveInBackground();
+
+                        // update the text view
+                        mTxtTitle.setText(detail);
+                    }
+                });
+                break;
+
+            case R.id.txt_author:
+
+                editDetailsDialogFragment.setDetailName("Author");
+                editDetailsDialogFragment.setCurrentDetail(mBook.getAuthor());
+                editDetailsDialogFragment.setListener(new EditDetailsDialogFragment.EditDetailsListener() {
+                    @Override
+                    public void onEditDetailsConfirm(DialogFragment dialog, String detail) {
+
+                        // update the book
+                        mBook.setAuthor(detail);
+                        mBook.saveInBackground();
+
+                        // update the text view
+                        mTxtAuthor.setText(detail);
+                    }
+                });
+
+                break;
+        }
+
+        // show the dialog
+        editDetailsDialogFragment.show(getFragmentManager(),"EditDetailsDialogFragment");
     }
 
     private void chooseNewCover() {

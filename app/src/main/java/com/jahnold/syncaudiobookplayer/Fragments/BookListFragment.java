@@ -130,7 +130,7 @@ public class BookListFragment extends Fragment {
                         .commit();
 
                 // tell the navigation draw that a change has happened
-                ((MainActivity) getActivity()).getNavigationDrawerFragment().setCurrentSelectedPosition(3);
+                ((MainActivity) getActivity()).getNavigationDrawerFragment().setCurrentSelectedPosition(2);
 
             }
         });
@@ -188,6 +188,8 @@ public class BookListFragment extends Fragment {
     public void addBook(Book book) {
         mAdapter.add(book);
     }
+
+    public void removeBook(Book book) { mAdapter.remove(book);}
 
     public void updateBook(Book book, int position) {
 

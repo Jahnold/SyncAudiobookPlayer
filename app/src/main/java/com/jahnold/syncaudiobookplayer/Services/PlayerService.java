@@ -23,6 +23,7 @@ import com.parse.FindCallback;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
+import com.parse.ParseUser;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,7 +77,16 @@ public class PlayerService extends Service
         return mPrepared && mMediaPlayer.isPlaying();
 
     }
-    public Book getBook() { return mBook; }
+    public Book getBook() {
+
+        if (mBook != null) {
+            return mBook;
+        }
+        else {
+            return null;
+        }
+
+    }
 
     /**
      *  If there is a special pause set returns the time left until pause in milliseconds
@@ -320,6 +330,12 @@ public class PlayerService extends Service
                 }
         );
 
+        // set this book as the current book on the user
+        ParseUser user = ParseUser.getCurrentUser();
+        user.put("currentBook", book);
+        user.saveInBackground();
+
+
     }
 
     /**
@@ -444,6 +460,13 @@ public class PlayerService extends Service
     }
 
     public void createNotification() {
+
+        // in the case where a book is not loaded
+        // stop the service and end the app
+        if (mBook == null) {
+            stopSelf();
+            return;
+        }
 
         // create a pending intent which brings the user to the playback fragment
         Intent playbackIntent = new Intent(this, MainActivity.class);

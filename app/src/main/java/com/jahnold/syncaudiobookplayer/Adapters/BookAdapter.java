@@ -1,9 +1,10 @@
 package com.jahnold.syncaudiobookplayer.Adapters;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,11 +15,11 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Fragments.BookDetailsFragment;
+import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
 import com.parse.GetDataCallback;
@@ -136,6 +137,37 @@ public class BookAdapter extends ArrayAdapter<Book> {
                         break;
 
                     case 1:
+
+                        // delete the book
+                        if (item != null) {
+
+                            // create the click listener for the confirmation dialog
+                            DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                    if (which == DialogInterface.BUTTON_POSITIVE) {
+
+                                        // delete from back end
+                                        item.deleteFromLibrary();
+
+                                        // remove item from book list
+                                        BookListFragment bookListFragment = (BookListFragment) ((MainActivity) getContext()).getSupportFragmentManager().findFragmentByTag("BookListFragment");
+                                        bookListFragment.removeBook(item);
+                                    }
+                                }
+                            };
+
+                            // create and show the confirmation dialog
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                            builder
+                                    .setTitle(getContext().getString(R.string.title_import_book_dialog))
+                                    .setMessage("This will remove this book from your library.  All listening progress will be lost.  No files will be deleted from your device.  Do you wish to continue?")
+                                    .setPositiveButton("Yes", onClickListener)
+                                    .setNegativeButton("Cancel", onClickListener)
+                                    .show();
+
+                        }
 
                         break;
                 }

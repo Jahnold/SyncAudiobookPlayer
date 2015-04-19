@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentManager;
 import android.os.Bundle;
 import android.view.Menu;
 import android.support.v4.widget.DrawerLayout;
+import android.widget.Toast;
 
 import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
@@ -15,6 +16,10 @@ import com.jahnold.syncaudiobookplayer.Fragments.NavigationDrawerFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.PlaybackFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
+import com.jahnold.syncaudiobookplayer.Services.PlayerService;
+import com.parse.GetCallback;
+import com.parse.ParseException;
+import com.parse.ParseObject;
 import com.parse.ParseUser;
 
 
@@ -48,7 +53,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
             }
 
             // add an item to the bundle to trick the nav draw into loading the playback fragment
-            savedInstanceState.putInt("selected_navigation_drawer_position", 3);
+            savedInstanceState.putInt("selected_navigation_drawer_position", 2);
         }
 
         // set up the nav draw
@@ -58,6 +63,23 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout)
         );
+
+        // load the last book the user used
+        Book book = (Book) ParseUser.getCurrentUser().get("currentBook");
+        if (book != null) {
+            book.fetchIfNeededInBackground(new GetCallback<ParseObject>() {
+                @Override
+                public void done(ParseObject parseObject, ParseException e) {
+                    if (parseObject != null) {
+                        Book fetchedBook = (Book) parseObject;
+                        PlayerService playerService = App.getPlayerService();
+                        if (!fetchedBook.equals(playerService.getBook())) {
+                            playerService.setBook(fetchedBook);
+                        }
+                    }
+                }
+            });
+        }
 
     }
 
@@ -87,7 +109,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
                         .commit();
                 break;
 
-            case 2:
+            case 1:
 
                 // load the file browser activity
                 Intent fileExploreIntent = new Intent(
@@ -107,20 +129,29 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
                 startActivityForResult(fileExploreIntent, 454);
                 break;
 
-            case 3:
+            case 2:
 
-                // load the play back fragment
-                PlaybackFragment playbackFragment = (PlaybackFragment) getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
-                if (playbackFragment == null) {
-                    playbackFragment = new PlaybackFragment();
+                // first check if there is a book loaded
+                PlayerService playerService = App.getPlayerService();
+                if (playerService.getBook() == null) {
+
+                    // there is no book loaded, alert the user then stop
+                    Toast.makeText(this, getString(R.string.toast_no_book), Toast.LENGTH_SHORT).show();
                 }
-                fragmentManager
-                        .beginTransaction()
-                        .replace(R.id.container, playbackFragment, "PlaybackFragment")
-                        .commit();
+                else {
+                    // load the play back fragment
+                    PlaybackFragment playbackFragment = (PlaybackFragment) getSupportFragmentManager().findFragmentByTag("PlaybackFragment");
+                    if (playbackFragment == null) {
+                        playbackFragment = new PlaybackFragment();
+                    }
+                    fragmentManager
+                            .beginTransaction()
+                            .replace(R.id.container, playbackFragment, "PlaybackFragment")
+                            .commit();
+                }
                 break;
 
-            case 5:
+            case 3:
 
                 // log out, load auth activity
                 ParseUser.logOut();
