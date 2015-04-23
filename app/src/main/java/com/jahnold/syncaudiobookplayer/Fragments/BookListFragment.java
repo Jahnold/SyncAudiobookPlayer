@@ -11,8 +11,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.jahnold.syncaudiobookplayer.Activities.FileBrowserActivity;
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Adapters.BookAdapter;
@@ -23,6 +26,7 @@ import com.jahnold.syncaudiobookplayer.Services.PlayerService;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
+import com.parse.ParseObject;
 import com.parse.ParseQuery;
 
 import java.util.ArrayList;
@@ -35,6 +39,7 @@ public class BookListFragment extends Fragment {
 
     private BookAdapter mAdapter;
     private ArrayList<Book> mBooks = new ArrayList<>();
+    private AdView mAdView;
 
     // empty constructor
     public BookListFragment() {}
@@ -46,7 +51,12 @@ public class BookListFragment extends Fragment {
 
         // get refs
         ListView bookList = (ListView) v.findViewById(R.id.list_books);
+        LinearLayout emptyView = (LinearLayout) v.findViewById(R.id.empty_book_list);
+        mAdView = (AdView) v.findViewById(R.id.adView);
 
+        // set up the ads
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
 
         // set up the adapter and set to to the list view
         mAdapter = new BookAdapter(
@@ -55,6 +65,8 @@ public class BookListFragment extends Fragment {
                 mBooks
         );
         bookList.setAdapter(mAdapter);
+
+
 
         // set up the click listener for the list items (books)
         bookList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -135,6 +147,7 @@ public class BookListFragment extends Fragment {
             }
         });
 
+
         // get all the books
         Book.loadAll(new FindCallback<Book>() {
             @Override
@@ -151,7 +164,42 @@ public class BookListFragment extends Fragment {
             }
         });
 
+        // set the empty view - do it after load so that it doesn't flash up first
+        bookList.setEmptyView(emptyView);
+
         return v;
+    }
+
+    @Override
+    public void onPause() {
+
+        // pause the ads
+        if (mAdView != null) {
+            mAdView.pause();
+        }
+
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // resume the ads
+        if (mAdView != null) {
+            mAdView.resume();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+
+        // destroy the ads
+        if (mAdView != null) {
+            mAdView.destroy();
+        }
+
+        super.onDestroy();
     }
 
     @Override

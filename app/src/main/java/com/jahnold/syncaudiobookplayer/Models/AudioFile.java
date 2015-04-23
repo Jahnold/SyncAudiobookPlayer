@@ -44,6 +44,10 @@ public class AudioFile extends ParseObject {
     public static void loadForBook(Book book, FindCallback<AudioFile> callback) {
 
         ParseQuery<AudioFile> query = ParseQuery.getQuery(AudioFile.class);
+
+        // set the query to use the cache first, if that fails use the network
+        query.setCachePolicy(ParseQuery.CachePolicy.CACHE_ELSE_NETWORK);
+
         query.whereEqualTo("book", book);
         query.orderByAscending("trackNumber");
         query.findInBackground(callback);

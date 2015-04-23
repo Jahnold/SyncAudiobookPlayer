@@ -73,7 +73,7 @@ public class BookAdapter extends ArrayAdapter<Book> {
 
             // set the cover picture
             if (item.getCover() == null) {
-                imgCover.setImageResource(R.drawable.book);
+                imgCover.setImageResource(R.drawable.ic_launcher);
             }
             else {
                 ParseFile cover = item.getCover();

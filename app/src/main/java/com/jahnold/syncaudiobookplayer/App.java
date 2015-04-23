@@ -15,6 +15,7 @@ import com.jahnold.syncaudiobookplayer.Util.Installation;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 import com.parse.Parse;
+import com.parse.ParseCrashReporting;
 import com.parse.ParseObject;
 
 /**
@@ -41,10 +42,13 @@ public class App extends Application {
         super.onCreate();
 
         // Set up Parse
+
+        // Enable Crash Reporting
+        ParseCrashReporting.enable(this);
+
         ParseObject.registerSubclass(Book.class);
         ParseObject.registerSubclass(AudioFile.class);
         ParseObject.registerSubclass(BookPath.class);
-        Parse.enableLocalDatastore(this);
         Parse.initialize(this, getString(R.string.parse_app_id), getString(R.string.parse_client_key));
 
         // set up ImageLoader

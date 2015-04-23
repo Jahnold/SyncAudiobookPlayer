@@ -65,7 +65,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         );
 
         // load the last book the user used
-        Book book = (Book) ParseUser.getCurrentUser().get("currentBook");
+        Book book = (Book) ParseUser.getCurrentUser().getParseObject("currentBook");
         if (book != null) {
             book.fetchIfNeededInBackground(new GetCallback<ParseObject>() {
                 @Override
@@ -74,7 +74,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
                         Book fetchedBook = (Book) parseObject;
                         PlayerService playerService = App.getPlayerService();
                         if (!fetchedBook.equals(playerService.getBook())) {
-                            playerService.setBook(fetchedBook);
+                            //playerService.setBook(fetchedBook);
                         }
                     }
                 }
@@ -103,9 +103,14 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
             case 0:
 
                 // load the book list fragment
+                BookListFragment bookListFragment = (BookListFragment) getSupportFragmentManager().findFragmentByTag("BookListFragment");
+                if (bookListFragment == null) {
+                    bookListFragment = new BookListFragment();
+                }
+
                 fragmentManager
                         .beginTransaction()
-                        .replace(R.id.container, new BookListFragment(), "BookListFragment")
+                        .replace(R.id.container, bookListFragment, "BookListFragment")
                         .commit();
                 break;
 
@@ -155,7 +160,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
                 // log out, load auth activity
                 ParseUser.logOut();
-                Intent intent = new Intent(this, AuthActivity.class);
+                Intent intent = new Intent(this, DispatchActivity.class);
                 mSuppressNotification = true;
                 startActivity(intent);
                 finish();

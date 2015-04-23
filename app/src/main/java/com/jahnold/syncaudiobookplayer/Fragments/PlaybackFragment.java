@@ -119,19 +119,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         // if the fragment is being re-used then we need to make sure we've got the correct book
         // and are showing the correct details for title, author, cover, etc
         mBook = mPlayerService.getBook();
-
-        if (mBook != null) {
-            mTxtTitle.setText(mBook.getTitle());
-            mTxtAuthor.setText(mBook.getAuthor());
-            mTxtTotal.setTime(mBook.getLength());
-            mTxtProgress.setTotalTime(mBook.getLength());
-
-            if (mBook.getCover() == null) {
-                mCover.setImageResource(R.drawable.book);
-            }
-
-            mSeekBar.setMax(mBook.getLength());
-        }
+        loadBookDetails();
 
         startProgressChecker();
 
@@ -176,34 +164,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
         startProgressChecker();
 
         // set things from the book
-        if (mBook != null) {
-
-            mTxtTitle.setText(mBook.getTitle());
-            mTxtAuthor.setText(mBook.getAuthor());
-            mTxtTotal.setTime(mBook.getLength());
-            mTxtProgress.setTotalTime(mBook.getLength());
-            mSeekBar.setMax(mBook.getLength());
-
-            if (mBook.getCover() == null) {
-                mCover.setImageResource(R.drawable.book);
-            }
-            else {
-                ParseFile cover = mBook.getCover();
-                cover.getDataInBackground(new GetDataCallback() {
-                    @Override
-                    public void done(byte[] bytes, ParseException e) {
-
-                        if (e == null) {
-
-                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            mCover.setImageBitmap(bitmap);
-
-                        } else { e.printStackTrace(); }
-                    }
-                });
-            }
-
-        }
+        loadBookDetails();
 
         // set the click listeners
         btnBack.setOnClickListener(this);
@@ -323,6 +284,44 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             }
         });
         pauseDialogFragment.show(getFragmentManager(), "PauseDialogFragment");
+    }
+
+    private void loadBookDetails() {
+
+        if (mBook != null) {
+
+            mTxtTitle.setText(mBook.getTitle());
+            mTxtAuthor.setText(mBook.getAuthor());
+            mTxtTotal.setTime(mBook.getLength());
+            mTxtProgress.setTotalTime(mBook.getLength());
+            mSeekBar.setMax(mBook.getLength());
+
+            // clear any image already showing
+            mCover.setImageDrawable(null);
+
+            if (mBook.getCover() == null) {
+                mCover.setImageResource(R.drawable.ic_launcher);
+            }
+            else {
+                ParseFile cover = mBook.getCover();
+                cover.getDataInBackground(new GetDataCallback() {
+                    @Override
+                    public void done(byte[] bytes, ParseException e) {
+
+                        if (e == null) {
+
+                            Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            if (mBook.getCover() != null) {
+                                mCover.setImageBitmap(bitmap);
+                            }
+
+                        } else { e.printStackTrace(); }
+                    }
+                });
+            }
+
+        }
+
     }
 
 

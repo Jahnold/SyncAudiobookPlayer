@@ -74,7 +74,7 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
             mTxtAuthor.setText(mBook.getAuthor());
 
             if (mBook.getCover() == null) {
-                mCover.setImageResource(R.drawable.book);
+                mCover.setImageResource(R.drawable.ic_launcher);
             }
             else {
                 ParseFile cover = mBook.getCover();

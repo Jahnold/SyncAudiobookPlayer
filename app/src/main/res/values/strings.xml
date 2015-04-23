@@ -4,10 +4,13 @@
     <string name="parse_app_id">vlT3h1c4hLBPBvdyayxNWdxpz71RVjkMnS8mFmIo</string>
     <string name="parse_client_key">D2qWkrjNjZDoKbdqoW5mESmK9Ytj3uz0A10HHEPr</string>
 
+    <string name="banner_ad_unit_id">ca-app-pub-3940256099942544/6300978111</string>
+
     <string name="text_login">Sync Audiobook Player</string>
     <string name="text_register_prompt">New to Sync Audiobook Player?</string>
     <string name="text_register">Register Sync Audiobook Player Account</string>
     <string name="text_login_failed">Oh Noes! Email or Password Incorrect</string>
+    <string name="text_empty_list">you\'ve not yet imported any books</string>
 
     <string name="hint_email">email</string>
     <string name="hint_password">password</string>

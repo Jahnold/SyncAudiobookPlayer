@@ -146,20 +146,26 @@ public class PlayerService extends Service
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if (MainActivity.INTENT_PLAY_PAUSE.equals(intent.getAction())) {
+        // first check that there is an intent
+        if (intent != null) {
 
-            togglePlayback();
-            createNotification();
+            if (MainActivity.INTENT_PLAY_PAUSE.equals(intent.getAction())) {
 
+                togglePlayback();
+                createNotification();
+
+            }
+
+            if (MainActivity.INTENT_EXIT.equals(intent.getAction())) {
+
+                pause();
+                clearNotification();
+                stopSelf();
+
+            }
         }
 
-        if (MainActivity.INTENT_EXIT.equals(intent.getAction())) {
 
-            pause();
-            clearNotification();
-            stopSelf();
-
-        }
 
         return super.onStartCommand(intent, flags, startId);
 
@@ -331,9 +337,9 @@ public class PlayerService extends Service
         );
 
         // set this book as the current book on the user
-        ParseUser user = ParseUser.getCurrentUser();
-        user.put("currentBook", book);
-        user.saveInBackground();
+//        ParseUser user = ParseUser.getCurrentUser();
+//        user.put("currentBook", book);
+//        user.saveEventually();
 
 
     }
@@ -506,12 +512,12 @@ public class PlayerService extends Service
         notificationView.setOnClickPendingIntent(R.id.btn_exit, exitPendingIntent);
         // set the play/pause button image depending on whether the media player is playing or not
         notificationView.setImageViewResource(R.id.btn_play_pause, (isPlaying()) ? R.drawable.ic_action_pause_white : R.drawable.ic_action_play_arrow_white);
-        notificationView.setImageViewResource(R.id.img_cover, R.drawable.book);
+        notificationView.setImageViewResource(R.id.img_cover, R.drawable.ic_launcher);
 
         // build the notification
         final Notification.Builder builder = new Notification.Builder(this);
         builder.setContentIntent(playbackPendingIntent)
-                .setSmallIcon(R.drawable.ic_action_book)
+                .setSmallIcon(R.drawable.notificaiton)
                 .setContentIntent(playbackPendingIntent);
 
         // set the cover picture

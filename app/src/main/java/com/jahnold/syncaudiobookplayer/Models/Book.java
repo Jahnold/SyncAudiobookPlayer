@@ -328,6 +328,11 @@ public class Book extends ParseObject {
     public static void loadAll(FindCallback<Book> callback) {
 
         ParseQuery<Book> query = ParseQuery.getQuery(Book.class);
+
+        // load from the cache first and then get the most recent data from the network
+        // this stops the empty view from flashing up whilst waiting for the network
+        query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
+
         query.whereEqualTo("user", ParseUser.getCurrentUser());
         query.orderByDescending("updatedAt");
         query.include("installations");
