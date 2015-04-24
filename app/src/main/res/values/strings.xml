@@ -62,5 +62,6 @@
     <string name="menu_pause_timer">Set Pause Timer</string>
 
     <string name="toast_no_book">No Book Currently Loaded</string>
+    <string name="toast_file_error">error loading file: </string>
 
 </resources>

@@ -1,5 +1,6 @@
 package com.jahnold.syncaudiobookplayer.Fragments;
 
+import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.app.Activity;
 import android.support.v7.app.ActionBar;
@@ -21,6 +22,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.R;
 
 /**
@@ -71,9 +73,17 @@ public class NavigationDrawerFragment extends Fragment {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         mUserLearnedDrawer = sp.getBoolean(PREF_USER_LEARNED_DRAWER, false);
 
+
         if (savedInstanceState != null) {
             mCurrentSelectedPosition = savedInstanceState.getInt(STATE_SELECTED_POSITION);
             mFromSavedInstanceState = true;
+        }
+
+        // Check for the playback intent
+        // If it is redirect to the PlaybackFragment
+        Intent intent = getActivity().getIntent();
+        if (MainActivity.INTENT_PLAYBACK.equals(intent.getAction())) {
+            mCurrentSelectedPosition = 2;
         }
 
         // Select either the default item (0) or the last selected item.

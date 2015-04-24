@@ -300,7 +300,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             mCover.setImageDrawable(null);
 
             if (mBook.getCover() == null) {
-                mCover.setImageResource(R.drawable.ic_launcher);
+                mCover.setImageResource(R.drawable.adapter_blank);
             }
             else {
                 ParseFile cover = mBook.getCover();

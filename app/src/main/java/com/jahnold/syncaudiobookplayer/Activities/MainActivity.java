@@ -17,9 +17,6 @@ import com.jahnold.syncaudiobookplayer.Fragments.PlaybackFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
 import com.jahnold.syncaudiobookplayer.Services.PlayerService;
-import com.parse.GetCallback;
-import com.parse.ParseException;
-import com.parse.ParseObject;
 import com.parse.ParseUser;
 
 
@@ -44,17 +41,6 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // check for an intent directing to the playback fragment
-        Intent intent = getIntent();
-        if (INTENT_PLAYBACK.equals(intent.getAction())) {
-
-            if (savedInstanceState == null) {
-                savedInstanceState = new Bundle();
-            }
-
-            // add an item to the bundle to trick the nav draw into loading the playback fragment
-            savedInstanceState.putInt("selected_navigation_drawer_position", 2);
-        }
 
         // set up the nav draw
         mNavigationDrawerFragment = (NavigationDrawerFragment) getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
@@ -64,23 +50,6 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
                 (DrawerLayout) findViewById(R.id.drawer_layout)
         );
 
-        // load the last book the user used
-        Book book = (Book) ParseUser.getCurrentUser().getParseObject("currentBook");
-        if (book != null) {
-            book.fetchIfNeededInBackground(new GetCallback<ParseObject>() {
-                @Override
-                public void done(ParseObject parseObject, ParseException e) {
-                    if (parseObject != null) {
-                        Book fetchedBook = (Book) parseObject;
-                        PlayerService playerService = App.getPlayerService();
-                        if (!fetchedBook.equals(playerService.getBook())) {
-                            //playerService.setBook(fetchedBook);
-                        }
-                    }
-                }
-            });
-        }
-
     }
 
     @Override
@@ -89,7 +58,12 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
         mSuppressNotification = false;
         if (!isChangingConfigurations()) {
-            App.getPlayerService().clearNotification();
+
+            // check to make sure service is there...sometimes it's not
+            PlayerService playerService = App.getPlayerService();
+            if (playerService != null) {
+                playerService.clearNotification();
+            }
         }
     }
 

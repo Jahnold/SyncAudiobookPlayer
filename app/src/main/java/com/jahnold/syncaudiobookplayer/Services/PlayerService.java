@@ -13,6 +13,7 @@ import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Models.AudioFile;
@@ -357,13 +358,19 @@ public class PlayerService extends Service
         AudioFile file = mAudioFiles.get(mBook.getCurrentFile());
 
         try {
-            //mMediaPlayer.setDataSource(mBookPath.getPath() + File.separator + file.getFilename());  <-- old book path version
             mMediaPlayer.setDataSource(mBook.getPathForCurrentDevice() + File.separator + file.getFilename());
         } catch (IOException e) {
             e.printStackTrace();
+            Toast.makeText(this,getString(R.string.toast_file_error) + file.getFilename(),Toast.LENGTH_LONG).show();
+
         }
 
-        mMediaPlayer.prepareAsync();
+
+        try {
+            mMediaPlayer.prepareAsync();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -512,7 +519,7 @@ public class PlayerService extends Service
         notificationView.setOnClickPendingIntent(R.id.btn_exit, exitPendingIntent);
         // set the play/pause button image depending on whether the media player is playing or not
         notificationView.setImageViewResource(R.id.btn_play_pause, (isPlaying()) ? R.drawable.ic_action_pause_white : R.drawable.ic_action_play_arrow_white);
-        notificationView.setImageViewResource(R.id.img_cover, R.drawable.ic_launcher);
+        notificationView.setImageViewResource(R.id.img_cover, R.drawable.notification_large_icon);
 
         // build the notification
         final Notification.Builder builder = new Notification.Builder(this);
