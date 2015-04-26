@@ -337,11 +337,6 @@ public class PlayerService extends Service
                 }
         );
 
-        // set this book as the current book on the user
-//        ParseUser user = ParseUser.getCurrentUser();
-//        user.put("currentBook", book);
-//        user.saveEventually();
-
 
     }
 
@@ -413,6 +408,7 @@ public class PlayerService extends Service
     public void cancelCountdownTimer() {
         if (mCountDownTimer != null) {
             mCountDownTimer.cancel();
+            mCountdownRemaining = -1;
         }
 
     }

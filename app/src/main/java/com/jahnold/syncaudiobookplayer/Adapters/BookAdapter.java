@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,6 +23,7 @@ import com.jahnold.syncaudiobookplayer.Fragments.BookDetailsFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
+import com.jahnold.syncaudiobookplayer.Util.Util;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -74,6 +76,10 @@ public class BookAdapter extends ArrayAdapter<Book> {
             // set the cover picture
             if (item.getCover() == null) {
                 imgCover.setImageResource(R.drawable.adapter_blank);
+
+                // set a colour filter based on the item id
+                imgCover.setColorFilter(Util.colorFromObjectId(item.getObjectId()));
+
             }
             else {
                 ParseFile cover = item.getCover();

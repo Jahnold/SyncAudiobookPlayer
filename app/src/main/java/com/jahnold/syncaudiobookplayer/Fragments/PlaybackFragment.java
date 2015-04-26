@@ -19,6 +19,7 @@ import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
 import com.jahnold.syncaudiobookplayer.Services.PlayerService;
+import com.jahnold.syncaudiobookplayer.Util.Util;
 import com.jahnold.syncaudiobookplayer.Views.TimerTextView;
 import com.parse.GetDataCallback;
 import com.parse.ParseException;
@@ -251,32 +252,34 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onPauseConfirm(int pauseType, int timerLength, boolean continueOnNudge) {
 
+                // always cancel any current countdown timers and end of file pauses
+                mPlayerService.cancelCountdownTimer();
+                mPlayerService.setPauseAtEndOfFile(false);
+
+                // set the continue on nudge boolean
+                mPlayerService.setContinueOnNudge(continueOnNudge);
+
                 switch (pauseType) {
 
                     case PauseDialogFragment.PAUSE_END_OF_FILE:
 
                         // tell the service
                         mPlayerService.setPauseAtEndOfFile(true);
-                        mPlayerService.setContinueOnNudge(continueOnNudge);
                         // make the countdown visible
-                        setPauseTimerVisibility(View.VISIBLE);
+                        //setPauseTimerVisibility(View.VISIBLE);
                         break;
 
                     case PauseDialogFragment.PAUSE_TIMER:
 
-                        // tell the service
+                        // set a countdown in the service
                         mPlayerService.setCountdownTimer(timerLength * 60 * 1000);
-                        mPlayerService.setContinueOnNudge(continueOnNudge);
                         // make the countdown visible
-                        setPauseTimerVisibility(View.VISIBLE);
+                        //setPauseTimerVisibility(View.VISIBLE);
                         break;
 
                     case PauseDialogFragment.PAUSE_NONE:
-                        mPlayerService.setPauseAtEndOfFile(false);
-                        mPlayerService.cancelCountdownTimer();
-                        mPlayerService.setContinueOnNudge(false);
                         // make the countdown invisible
-                        setPauseTimerVisibility(View.INVISIBLE);
+                        //setPauseTimerVisibility(View.INVISIBLE);
                         break;
                 }
 
@@ -300,7 +303,8 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
             mCover.setImageDrawable(null);
 
             if (mBook.getCover() == null) {
-                mCover.setImageResource(R.drawable.adapter_blank);
+                mCover.setImageResource(R.drawable.adapter_blank_large);
+                mCover.setColorFilter(Util.colorFromObjectId(mBook.getObjectId()));
             }
             else {
                 ParseFile cover = mBook.getCover();
@@ -312,6 +316,7 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
                             Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                             if (mBook.getCover() != null) {
+                                mCover.clearColorFilter();
                                 mCover.setImageBitmap(bitmap);
                             }
 
