@@ -27,6 +27,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -229,4 +230,11 @@ public class ParseLoginActivity extends FragmentActivity implements
 
     return mergedOptions;
   }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        Window window = getWindow();
+        window.setFormat(PixelFormat.RGBA_8888);
+    }
 }

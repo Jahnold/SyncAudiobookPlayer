@@ -33,6 +33,8 @@
     </style>
 
     <style name="ParseLoginUI.EditText" parent="@android:style/Widget.EditText">
+        <item name="android:textColor">@color/com_parse_ui_parse_login_display_text</item>
+        <item name="android:textColorHint">@color/com_parse_ui_parse_login_display_text</item>
         <item name="android:singleLine">true</item>
     </style>
 </resources>
