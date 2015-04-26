@@ -1,5 +1,7 @@
 package com.jahnold.syncaudiobookplayer.Util;
 
+import android.graphics.Color;
+
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -68,5 +70,15 @@ public class Util {
 
         // if we got this far it's not a match
         return false;
+    }
+
+    public static int colorFromObjectId(String objectId) {
+
+        int hash = objectId.hashCode();
+        int r = (hash & 0xFF0000) >> 16;
+        int g = (hash & 0x00FF00) >> 8;
+        int b = hash & 0x0000FF;
+
+        return Color.rgb(r,g,b);
     }
 }

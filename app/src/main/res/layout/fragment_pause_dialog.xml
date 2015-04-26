@@ -98,7 +98,29 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/label_pause_timer"
-            android:layout_margin="10dp"/>
+            android:layout_margin="10dp"
+            android:layout_centerVertical="true"
+            />
+
+        <EditText
+            android:id="@+id/et_pause_timer"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:layout_toRightOf="@id/txt_pause_timer"
+            android:layout_margin="10dp"
+            android:text="15"
+            android:maxLength="3"
+            />
+
+        <TextView
+            android:id="@+id/txt_pause_mins"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_pause_minutes"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/et_pause_timer"
+            />
 
         <RadioButton
             android:id="@+id/radio_timer"
@@ -109,20 +131,20 @@
 
             android:layout_centerVertical="true"/>
 
-        <NumberPicker
-            android:id="@+id/num_hours"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/txt_pause_timer"
-            android:layout_marginLeft="10dp"/>
+        <!--<NumberPicker-->
+            <!--android:id="@+id/num_hours"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_below="@id/txt_pause_timer"-->
+            <!--android:layout_marginLeft="10dp"/>-->
 
-        <NumberPicker
-            android:id="@+id/num_mins"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/txt_pause_timer"
-            android:layout_toRightOf="@id/num_hours"
-            />
+        <!--<NumberPicker-->
+            <!--android:id="@+id/num_mins"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_below="@id/txt_pause_timer"-->
+            <!--android:layout_toRightOf="@id/num_hours"-->
+            <!--/>-->
 
     </RelativeLayout>
 
