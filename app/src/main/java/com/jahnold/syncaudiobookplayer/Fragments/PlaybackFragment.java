@@ -126,6 +126,8 @@ public class PlaybackFragment extends Fragment implements View.OnClickListener {
 
     }
 
+
+
     private void startProgressChecker() {
 
         if (!mProgressCheckerActive) new Thread(mProgressChecker).start();

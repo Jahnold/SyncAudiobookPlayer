@@ -397,87 +397,86 @@ public class Book extends ParseObject {
         AudioFile.loadForBook(this, new FindCallback<AudioFile>() {
             @Override
             public void done(final List<AudioFile> audioFiles, ParseException e) {
-                 if (e != null) {
-                     return;
-                 }
+                if (e != null) {
+                    return;
+                }
 
-                 new AsyncTask<Void,String,Void>() {
+                new AsyncTask<Void, String, Void>() {
 
-                     private boolean mAllFilesFound = true;
-                     private ArrayList<String> mMissingFiles = new ArrayList<>();
+                    private boolean mAllFilesFound = true;
+                    private ArrayList<String> mMissingFiles = new ArrayList<>();
 
-                     @Override
-                     protected Void doInBackground(Void... params) {
+                    @Override
+                    protected Void doInBackground(Void... params) {
 
-                         for (AudioFile audioFile : audioFiles) {
+                        for (AudioFile audioFile : audioFiles) {
 
-                             publishProgress(audioFile.getFilename());
+                            publishProgress(audioFile.getFilename());
 
-                             // check that file exists on device
-                             File file = new File(directory + File.separator + audioFile.getFilename());
-                             if (!file.exists()) {
-                                 // keep track of the missing files
-                                 mMissingFiles.add(audioFile.getFilename());
-                                 mAllFilesFound = false;
-                             }
-                         }
+                            // check that file exists on device
+                            File file = new File(directory + File.separator + audioFile.getFilename());
+                            if (!file.exists()) {
+                                // keep track of the missing files
+                                mMissingFiles.add(audioFile.getFilename());
+                                mAllFilesFound = false;
+                            }
+                        }
 
-                         return null;
-                     }
+                        return null;
+                    }
 
-                     @Override
-                     protected void onProgressUpdate(String... filename) {
+                    @Override
+                    protected void onProgressUpdate(String... filename) {
 
-                         dialog.setMessage(filename[0]);
+                        dialog.setMessage(filename[0]);
 
-                     }
+                    }
 
-                     @Override
-                     protected void onPostExecute(Void aVoid) {
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
 
-                         dialog.hide();
+                        dialog.hide();
 
-                         if (mAllFilesFound) {
+                        if (mAllFilesFound) {
 
-                             // everything worked, make a BookPath
-                             // create a book path object for this book/installation
-                             final BookPath bookPath = new BookPath();
-                             bookPath.setBook(Book.this);
-                             bookPath.setInstallId(App.getInstallId());
-                             bookPath.setPath(directory);
-//                    bookPath.saveInBackground(new SaveCallback() {
-//
-//                        @Override
-//                        public void done(ParseException e) {
-//
-//                            // put the book path in an array to save to the book
-//                            List<BookPath> currentBookPaths = getList("installations");
-//                            ArrayList<BookPath> newBookPaths = new ArrayList<>();
-//                            newBookPaths.add(bookPath);
-//                            newBookPaths.addAll(currentBookPaths);
-//
-//                            // update and save book
-//                            mOnDevice = ON_DEVICE_TRUE;
-//                            mDevicePath = bookPath.getPath();
-//                            setBookPaths(newBookPaths);
-//                            saveInBackground();
-//
-//                            // update the book list fragment
-//                            BookListFragment bookListFragment = (BookListFragment) ((MainActivity) context).getSupportFragmentManager().findFragmentByTag("BookListFragment");
-//                            if (bookListFragment != null  && position != -1) {
-//                                bookListFragment.updateBook(Book.this, position);
-//                            }
-//                        }
-//                    });
-                         }
-                         else {
+                            // everything worked, make a BookPath
+                            // create a book path object for this book/installation
+                            final BookPath bookPath = new BookPath();
+                            bookPath.setBook(Book.this);
+                            bookPath.setInstallId(App.getInstallId());
+                            bookPath.setPath(directory);
+                            bookPath.saveInBackground(new SaveCallback() {
 
-                             Toast.makeText(context, context.getString(R.string.toast_import_error), Toast.LENGTH_LONG).show();
+                                @Override
+                                public void done(ParseException e) {
 
-                         }
+                                    // put the book path in an array to save to the book
+                                    List<BookPath> currentBookPaths = getList("installations");
+                                    ArrayList<BookPath> newBookPaths = new ArrayList<>();
+                                    newBookPaths.add(bookPath);
+                                    newBookPaths.addAll(currentBookPaths);
 
-                     }
-                 }.execute();
+                                    // update and save book
+                                    mOnDevice = ON_DEVICE_TRUE;
+                                    mDevicePath = bookPath.getPath();
+                                    setBookPaths(newBookPaths);
+                                    saveInBackground();
+
+                                    // update the book list fragment
+                                    BookListFragment bookListFragment = (BookListFragment) ((MainActivity) context).getSupportFragmentManager().findFragmentByTag("BookListFragment");
+                                    if (bookListFragment != null && position != -1) {
+                                        bookListFragment.updateBook(Book.this, position);
+                                    }
+                                }
+                            });
+                        } else {
+
+                            Toast.makeText(context, context.getString(R.string.toast_import_error), Toast.LENGTH_LONG).show();
+
+                        }
+
+                    }
+                }.execute();
 
             }
         });

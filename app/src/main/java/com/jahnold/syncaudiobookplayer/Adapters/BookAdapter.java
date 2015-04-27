@@ -73,6 +73,9 @@ public class BookAdapter extends ArrayAdapter<Book> {
             txtTitle.setText(item.getTitle());
             txtAuthor.setText(item.getAuthor());
 
+            // clear any existing colour filter
+            imgCover.clearColorFilter();
+
             // set the cover picture
             if (item.getCover() == null) {
                 imgCover.setImageResource(R.drawable.adapter_blank);

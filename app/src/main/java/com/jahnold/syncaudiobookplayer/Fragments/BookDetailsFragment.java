@@ -20,6 +20,7 @@ import com.jahnold.syncaudiobookplayer.Adapters.FileAdapter;
 import com.jahnold.syncaudiobookplayer.Models.AudioFile;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
+import com.jahnold.syncaudiobookplayer.Util.Util;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.assist.ImageSize;
 import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
@@ -75,7 +76,7 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
 
             if (mBook.getCover() == null) {
                 mCover.setImageResource(R.drawable.adapter_blank);
-
+                mCover.setColorFilter(Util.colorFromObjectId(mBook.getObjectId()));
             }
             else {
                 ParseFile cover = mBook.getCover();
@@ -218,8 +219,9 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
             @Override
             public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
 
-                // set the image in the image view
+                // set the image in the image view and clear any colour filter
                 mCover.setImageBitmap(loadedImage);
+                mCover.clearColorFilter();
 
                 // create a parse file for the bitmap
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();

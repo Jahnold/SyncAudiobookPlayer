@@ -126,6 +126,7 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
                     fragmentManager
                             .beginTransaction()
                             .replace(R.id.container, playbackFragment, "PlaybackFragment")
+                            .addToBackStack(null)
                             .commit();
                 }
                 break;

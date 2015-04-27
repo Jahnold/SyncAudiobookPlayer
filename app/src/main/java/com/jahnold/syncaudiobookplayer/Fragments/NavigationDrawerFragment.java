@@ -79,15 +79,20 @@ public class NavigationDrawerFragment extends Fragment {
             mFromSavedInstanceState = true;
         }
 
+        // Select either the default item (0) or the last selected item.
+        selectItem(mCurrentSelectedPosition);
+
         // Check for the playback intent
         // If it is redirect to the PlaybackFragment
         Intent intent = getActivity().getIntent();
         if (MainActivity.INTENT_PLAYBACK.equals(intent.getAction())) {
-            mCurrentSelectedPosition = 2;
-        }
 
-        // Select either the default item (0) or the last selected item.
-        selectItem(mCurrentSelectedPosition);
+            // set the position to 2 (playback fragment)
+            selectItem(2);
+
+            // clear the intent action so that this doesn't get tripped on a rotation
+            intent.setAction("");
+        }
     }
 
     @Override
