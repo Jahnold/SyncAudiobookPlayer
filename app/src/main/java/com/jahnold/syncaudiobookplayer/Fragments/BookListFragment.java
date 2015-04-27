@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,6 +54,7 @@ public class BookListFragment extends Fragment {
         // get refs
         ListView bookList = (ListView) v.findViewById(R.id.list_books);
         LinearLayout emptyView = (LinearLayout) v.findViewById(R.id.empty_book_list);
+        final SwipeRefreshLayout swipe = (SwipeRefreshLayout) v.findViewById(R.id.swipe_container);
         mAdView = (AdView) v.findViewById(R.id.adView);
 
         // set up the ads
@@ -147,9 +150,32 @@ public class BookListFragment extends Fragment {
             }
         });
 
+        swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+
+                // get all the books
+                Book.loadAll(false, new FindCallback<Book>() {
+                    @Override
+                    public void done(List<Book> books, ParseException e) {
+
+                        if (e == null) {
+                            mAdapter.clear();
+                            mAdapter.addAll(books);
+                            swipe.setRefreshing(false);
+                        }
+                        else {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
+            }
+        });
+
 
         // get all the books
-        Book.loadAll(new FindCallback<Book>() {
+        Book.loadAll(true, new FindCallback<Book>() {
             @Override
             public void done(List<Book> books, ParseException e) {
 

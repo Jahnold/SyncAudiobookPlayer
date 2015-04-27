@@ -63,5 +63,6 @@
 
     <string name="toast_no_book">No Book Currently Loaded</string>
     <string name="toast_file_error">error loading file: </string>
+    <string name="toast_import_error">Error Importing Book - Some Files Missing</string>
 
 </resources>

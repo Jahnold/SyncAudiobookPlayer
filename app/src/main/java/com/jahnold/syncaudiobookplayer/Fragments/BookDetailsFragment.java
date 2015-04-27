@@ -75,6 +75,7 @@ public class BookDetailsFragment extends Fragment implements View.OnClickListene
 
             if (mBook.getCover() == null) {
                 mCover.setImageResource(R.drawable.adapter_blank);
+
             }
             else {
                 ParseFile cover = mBook.getCover();

@@ -8,11 +8,13 @@ import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.support.v4.app.DialogFragment;
 import android.view.View;
+import android.widget.Toast;
 
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Fragments.BookListFragment;
 import com.jahnold.syncaudiobookplayer.Fragments.ImportBookDialogFragment;
+import com.jahnold.syncaudiobookplayer.R;
 import com.jahnold.syncaudiobookplayer.Util.Installation;
 import com.jahnold.syncaudiobookplayer.Util.Util;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -325,13 +327,15 @@ public class Book extends ParseObject {
 
 
 
-    public static void loadAll(FindCallback<Book> callback) {
+    public static void loadAll(boolean useCache, FindCallback<Book> callback) {
 
         ParseQuery<Book> query = ParseQuery.getQuery(Book.class);
 
-        // load from the cache first and then get the most recent data from the network
-        // this stops the empty view from flashing up whilst waiting for the network
-        query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
+        if (useCache) {
+            // load from the cache first and then get the most recent data from the network
+            // this stops the empty view from flashing up whilst waiting for the network
+            query.setCachePolicy(ParseQuery.CachePolicy.CACHE_THEN_NETWORK);
+        }
 
         query.whereEqualTo("user", ParseUser.getCurrentUser());
         query.orderByDescending("updatedAt");
@@ -390,85 +394,95 @@ public class Book extends ParseObject {
      */
     public void importFromLocal(final Context context, final String directory, final ProgressDialog dialog, final int position) {
 
-        new AsyncTask<Void,String,Void>() {
-
-            private boolean mAllFilesFound = true;
-            private ArrayList<String> mMissingFiles = new ArrayList<>();
-
+        AudioFile.loadForBook(this, new FindCallback<AudioFile>() {
             @Override
-            protected Void doInBackground(Void... params) {
+            public void done(final List<AudioFile> audioFiles, ParseException e) {
+                 if (e != null) {
+                     return;
+                 }
 
-                // get audio files
-                AudioFile.loadForBook(Book.this, new FindCallback<AudioFile>() {
-                    @Override
-                    public void done(List<AudioFile> audioFiles, ParseException e) {
+                 new AsyncTask<Void,String,Void>() {
 
-                        for (AudioFile audioFile : audioFiles) {
+                     private boolean mAllFilesFound = true;
+                     private ArrayList<String> mMissingFiles = new ArrayList<>();
 
-                            publishProgress(audioFile.getFilename());
+                     @Override
+                     protected Void doInBackground(Void... params) {
 
-                            // check that file exists on device
-                            File file = new File(directory + File.separator + audioFile.getFilename());
-                            if (!file.exists()) {
-                                // keep track of the missing files
-                                mMissingFiles.add(audioFile.getFilename());
-                                mAllFilesFound = false;
-                            }
-                        }
-                    }
-                });
+                         for (AudioFile audioFile : audioFiles) {
 
-                return null;
+                             publishProgress(audioFile.getFilename());
+
+                             // check that file exists on device
+                             File file = new File(directory + File.separator + audioFile.getFilename());
+                             if (!file.exists()) {
+                                 // keep track of the missing files
+                                 mMissingFiles.add(audioFile.getFilename());
+                                 mAllFilesFound = false;
+                             }
+                         }
+
+                         return null;
+                     }
+
+                     @Override
+                     protected void onProgressUpdate(String... filename) {
+
+                         dialog.setMessage(filename[0]);
+
+                     }
+
+                     @Override
+                     protected void onPostExecute(Void aVoid) {
+
+                         dialog.hide();
+
+                         if (mAllFilesFound) {
+
+                             // everything worked, make a BookPath
+                             // create a book path object for this book/installation
+                             final BookPath bookPath = new BookPath();
+                             bookPath.setBook(Book.this);
+                             bookPath.setInstallId(App.getInstallId());
+                             bookPath.setPath(directory);
+//                    bookPath.saveInBackground(new SaveCallback() {
+//
+//                        @Override
+//                        public void done(ParseException e) {
+//
+//                            // put the book path in an array to save to the book
+//                            List<BookPath> currentBookPaths = getList("installations");
+//                            ArrayList<BookPath> newBookPaths = new ArrayList<>();
+//                            newBookPaths.add(bookPath);
+//                            newBookPaths.addAll(currentBookPaths);
+//
+//                            // update and save book
+//                            mOnDevice = ON_DEVICE_TRUE;
+//                            mDevicePath = bookPath.getPath();
+//                            setBookPaths(newBookPaths);
+//                            saveInBackground();
+//
+//                            // update the book list fragment
+//                            BookListFragment bookListFragment = (BookListFragment) ((MainActivity) context).getSupportFragmentManager().findFragmentByTag("BookListFragment");
+//                            if (bookListFragment != null  && position != -1) {
+//                                bookListFragment.updateBook(Book.this, position);
+//                            }
+//                        }
+//                    });
+                         }
+                         else {
+
+                             Toast.makeText(context, context.getString(R.string.toast_import_error), Toast.LENGTH_LONG).show();
+
+                         }
+
+                     }
+                 }.execute();
+
             }
+        });
 
-            @Override
-            protected void onProgressUpdate(String... filename) {
 
-                dialog.setMessage(filename[0]);
-
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-
-                dialog.hide();
-
-                if (mAllFilesFound) {
-
-                    // everything worked, make a BookPath
-                    // create a book path object for this book/installation
-                    final BookPath bookPath = new BookPath();
-                    bookPath.setBook(Book.this);
-                    bookPath.setInstallId(App.getInstallId());
-                    bookPath.setPath(directory);
-                    bookPath.saveInBackground(new SaveCallback() {
-
-                        @Override
-                        public void done(ParseException e) {
-
-                            // put the book path in an array to save to the book
-                            List<BookPath> currentBookPaths = getList("installations");
-                            ArrayList<BookPath> newBookPaths = new ArrayList<>();
-                            newBookPaths.add(bookPath);
-                            newBookPaths.addAll(currentBookPaths);
-
-                            // update and save book
-                            mOnDevice = ON_DEVICE_TRUE;
-                            mDevicePath = bookPath.getPath();
-                            setBookPaths(newBookPaths);
-                            saveInBackground();
-
-                            // update the book list fragment
-                            BookListFragment bookListFragment = (BookListFragment) ((MainActivity) context).getSupportFragmentManager().findFragmentByTag("BookListFragment");
-                            if (bookListFragment != null  && position != -1) {
-                                bookListFragment.updateBook(Book.this, position);
-                            }
-                        }
-                    });
-                }
-
-            }
-        }.execute();
     }
 
     public void deleteFromLibrary() {
