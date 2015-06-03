@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -21,6 +23,7 @@ import com.google.android.gms.ads.AdView;
 import com.jahnold.syncaudiobookplayer.Activities.FileBrowserActivity;
 import com.jahnold.syncaudiobookplayer.Activities.MainActivity;
 import com.jahnold.syncaudiobookplayer.Adapters.BookAdapter;
+import com.jahnold.syncaudiobookplayer.Adapters.BookRecyclerAdapter;
 import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
@@ -39,7 +42,8 @@ import java.util.List;
  */
 public class BookListFragment extends Fragment {
 
-    private BookAdapter mAdapter;
+    //private BookAdapter mAdapter;
+    private BookRecyclerAdapter mAdapter;
     private ArrayList<Book> mBooks = new ArrayList<>();
     private AdView mAdView;
 
@@ -52,7 +56,8 @@ public class BookListFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_book_list,container, false);
 
         // get refs
-        ListView bookList = (ListView) v.findViewById(R.id.list_books);
+        //ListView bookList = (ListView) v.findViewById(R.id.list_books);
+        RecyclerView bookList = (RecyclerView) v.findViewById(R.id.book_recycler);
         LinearLayout emptyView = (LinearLayout) v.findViewById(R.id.empty_book_list);
         final SwipeRefreshLayout swipe = (SwipeRefreshLayout) v.findViewById(R.id.swipe_container);
         mAdView = (AdView) v.findViewById(R.id.adView);
@@ -61,20 +66,18 @@ public class BookListFragment extends Fragment {
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
 
-        // set up the adapter and set to to the list view
-        mAdapter = new BookAdapter(
-                getActivity(),
-                0,
-                mBooks
-        );
+
+        // set up the recycler view
+        bookList.setHasFixedSize(true);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        bookList.setLayoutManager(layoutManager);
+        mAdapter = new BookRecyclerAdapter(mBooks);
         bookList.setAdapter(mAdapter);
 
-
-
         // set up the click listener for the list items (books)
-        bookList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mAdapter.setOnItemClickListener(new BookRecyclerAdapter.RecyclerAdapterItemOnClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
+            public void onClick(final int position) {
 
                 // get the clicked book
                 final Book book = mAdapter.getItem(position);
@@ -115,11 +118,11 @@ public class BookListFragment extends Fragment {
                     // show the import on this device dialog
                     AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                     builder
-                        .setTitle(getString(R.string.title_import_book_dialog))
-                        .setMessage("This book has not been imported on the current device.  Do you want to do so now?")
-                        .setPositiveButton("Yes", onClickListener)
-                        .setNegativeButton("Cancel", onClickListener)
-                        .show();
+                            .setTitle(getString(R.string.title_import_book_dialog))
+                            .setMessage("This book has not been imported on the current device.  Do you want to do so now?")
+                            .setPositiveButton("Yes", onClickListener)
+                            .setNegativeButton("Cancel", onClickListener)
+                            .show();
 
                     // don't continue
                     return;
@@ -149,6 +152,7 @@ public class BookListFragment extends Fragment {
 
             }
         });
+
 
         swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -191,7 +195,7 @@ public class BookListFragment extends Fragment {
         });
 
         // set the empty view - do it after load so that it doesn't flash up first
-        bookList.setEmptyView(emptyView);
+//        bookList.setEmptyView(emptyView);
 
         return v;
     }
