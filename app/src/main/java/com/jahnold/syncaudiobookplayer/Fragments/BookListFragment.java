@@ -12,11 +12,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.DragEvent;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -28,6 +30,7 @@ import com.jahnold.syncaudiobookplayer.App;
 import com.jahnold.syncaudiobookplayer.Models.Book;
 import com.jahnold.syncaudiobookplayer.R;
 import com.jahnold.syncaudiobookplayer.Services.PlayerService;
+import com.jahnold.syncaudiobookplayer.Views.BookListViewHolder;
 import com.parse.FindCallback;
 import com.parse.GetCallback;
 import com.parse.ParseException;
@@ -75,7 +78,8 @@ public class BookListFragment extends Fragment {
         bookList.setAdapter(mAdapter);
 
         // set up the click listener for the list items (books)
-        mAdapter.setOnItemClickListener(new BookRecyclerAdapter.RecyclerAdapterItemOnClickListener() {
+        mAdapter.setOnItemClickListener(new BookListViewHolder.ViewHolderItemClickListener() {
+
             @Override
             public void onClick(final int position) {
 
@@ -153,6 +157,68 @@ public class BookListFragment extends Fragment {
             }
         });
 
+        // set the click listener for the popup menu items
+        mAdapter.setMenuItemClickListener(new BookListViewHolder.PopupMenuItemClickListener() {
+            @Override
+            public boolean onClick(int position, MenuItem menuItem) {
+
+                // get the book
+                final Book book = mAdapter.getItem(position);
+
+                switch (menuItem.getItemId()) {
+
+                    case 0:
+
+                        // show the book details
+                        BookDetailsFragment bookDetailsFragment = new BookDetailsFragment();
+                        bookDetailsFragment.setBook(book);
+                        getActivity().getSupportFragmentManager()
+                                .beginTransaction()
+                                .replace(R.id.container,bookDetailsFragment, "BookDetailsFragment")
+                                .addToBackStack(null)
+                                .commit();
+
+                        break;
+
+                    case 1:
+
+                        // delete the book
+                        if (book != null) {
+
+                            // create the click listener for the confirmation dialog
+                            DialogInterface.OnClickListener onClickListener = new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                    if (which == DialogInterface.BUTTON_POSITIVE) {
+
+                                        // delete from back end
+                                        book.deleteFromLibrary();
+
+                                        // remove item from book list
+                                        mAdapter.remove(book);
+                                    }
+                                }
+                            };
+
+                            // create and show the confirmation dialog
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                            builder
+                                    .setTitle(getActivity().getString(R.string.title_import_book_dialog))
+                                    .setMessage("This will remove this book from your library.  All listening progress will be lost.  No files will be deleted from your device.  Do you wish to continue?")
+                                    .setPositiveButton("Yes", onClickListener)
+                                    .setNegativeButton("Cancel", onClickListener)
+                                    .show();
+
+                        }
+
+                        break;
+                }
+
+                return false;
+
+            }
+        });
 
         swipe.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
